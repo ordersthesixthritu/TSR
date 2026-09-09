@@ -1,1 +1,1 @@
-@media(min-width:1001px){.loader-v2{display:none!important}.header-v3 .brand-v3{display:flex!important}}
+@media(min-width:1001px){.loader-v2{display:none!important}.header-v3{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.header-v3 .brand-v3{display:none!important}}
