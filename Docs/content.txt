@@ -1,0 +1,579 @@
+THE SIXTH RITU
+Website Content — V1
+Brand Tagline
+
+The Season of Luxury
+
+Supporting Brand Line
+
+Six fragrances. Six moments. One unforgettable season.
+
+1. ANNOUNCEMENT BAR
+
+Slider में 2–3 short messages रख सकते हैं:
+
+Discover The Sixth Ritu — A New Season of Fine Fragrance
+
+Luxury, Crafted to Become a Memory
+
+Explore Our Signature Collection
+
+Shipping/discount जैसी बात client confirm करने के बाद ही यहाँ add करेंगे।
+
+2. HEADER / NAVIGATION
+
+Home
+Shop
+The Collection
+Our Story
+The Sixth Ritu
+Contact
+
+Right side:
+
+Search | Account | Wishlist | Bag
+
+Shop dropdown:
+
+Shop All
+Dark Monsoon
+Royal Zafran Rose
+Golden Ritual
+Golden Leaf
+Crystal Bloom
+Flora Silk
+3. HOMEPAGE HERO
+
+Hero को banner slider रखेंगे, लेकिन पहला banner brand statement होगा।
+
+HERO SLIDE 01
+
+THE SIXTH RITU
+
+A Season Beyond the Six.
+
+India has always known six seasons.
+We created one more — a season experienced through scent.
+
+The Season of Luxury.
+
+CTA:
+
+Discover The Collection
+
+Secondary:
+
+Our Story
+
+HERO SLIDE 02
+Six Fragrances.
+Six Stories.
+
+From rain-soaked earth and royal rose to golden amber and delicate florals, discover fragrances inspired by moments that remain with you.
+
+Explore All Fragrances
+
+HERO SLIDE 03
+
+Small text:
+
+FINE FRAGRANCE • INDIAN IMAGINATION • MODERN LUXURY
+
+Main:
+
+Made to Be Remembered.
+
+Not simply a fragrance you wear, but a feeling that becomes part of your story.
+
+Find Your Ritu
+
+4. BRAND INTRODUCTION
+
+Small heading:
+
+WELCOME TO THE SIXTH RITU
+
+Some Seasons Change the World.
+Others Stay With You.
+
+India has always known six seasons — Vasanta, Grishma, Varsha, Sharad, Hemanta and Shishira.
+
+Each transforms the world around us and leaves behind a feeling.
+
+We imagine another.
+
+A season found in the scent of rain after a storm, the warmth of an evening ritual, flowers resting on silk, or the memory of someone after they have gone.
+
+This is The Sixth Ritu — a season created through fragrance.
+
+CTA: Discover Our Story
+
+5. FEATURED COLLECTION
+
+Small heading:
+
+THE SIGNATURE COLLECTION
+
+Discover Your Ritu
+
+Six distinctive fragrances. Six different moods.
+Created for the moments you want to remember.
+
+यहाँ सभी 6 actual product images आएँगी।
+
+01 — DARK MONSOON
+
+Rain • Earth • Oud
+
+The Power After the Storm
+
+Deep, atmospheric and quietly commanding.
+
+Dark Monsoon captures the feeling of rain settling into the earth — where freshness meets depth and oud leaves behind a powerful, lingering presence.
+
+Explore Dark Monsoon
+
+02 — ROYAL ZAFRAN ROSE
+
+Saffron • Rose • Agarwood
+
+A Rose, Made Royal.
+
+An opulent interpretation of timeless rose, enriched with the warmth of zafran and the depth of agarwood.
+
+Rich, elegant and unmistakably regal.
+
+Explore Royal Zafran Rose
+
+03 — GOLDEN RITUAL
+
+Coffee • Vanilla • Amber
+
+Warmth Becomes a Ritual.
+
+The comforting richness of coffee meets smooth vanilla and glowing amber.
+
+Warm, enveloping and intimate — a fragrance inspired by the rituals we return to again and again.
+
+Explore Golden Ritual
+
+04 — GOLDEN LEAF
+
+Tobacco • Honey • Tonka
+
+Wrapped in Golden Warmth.
+
+A rich tobacco accord softened by honey and the smooth warmth of tonka.
+
+Confident and refined, Golden Leaf leaves a warm impression that stays close to the skin.
+
+Explore Golden Leaf
+
+05 — CRYSTAL BLOOM
+
+Water • Aromatic Air • Florals
+
+Where Water Becomes a Flower.
+
+Clean, luminous and effortlessly fresh.
+
+Crystal Bloom evokes clear water, open air and delicate flowers awakening in the first light of morning.
+
+Explore Crystal Bloom
+
+06 — FLORA SILK
+
+Soft Florals • Elegant Bouquet
+
+Flowers, Draped in Silk.
+
+A graceful bouquet inspired by the softness of petals against silk.
+
+Delicate yet memorable, Flora Silk expresses understated elegance through a beautifully composed floral character.
+
+Explore Flora Silk
+
+6. INTERACTIVE “FIND YOUR RITU”
+
+यह homepage का visually strong interactive section बनेगा।
+
+Small:
+
+CHOOSE BY MOOD
+
+What Is Your Ritu Today?
+
+I want something...
+
+POWERFUL
+
+Dark Monsoon
+Deep • Earthy • Mysterious
+
+REGAL
+
+Royal Zafran Rose
+Rich • Floral • Opulent
+
+COMFORTING
+
+Golden Ritual
+Warm • Sweet • Intimate
+
+BOLD
+
+Golden Leaf
+Warm • Refined • Confident
+
+FRESH
+
+Crystal Bloom
+Clean • Luminous • Airy
+
+ELEGANT
+
+Flora Silk
+Soft • Floral • Graceful
+
+CTA:
+
+Find Your Fragrance →
+
+इसको simple grid नहीं, interactive animated selector बनवाएँगे।
+
+7. THE SIX SEASONS STORY
+
+यह brand की सबसे unique identity है, इसलिए homepage पर जरूर आएगा।
+
+Small:
+
+THE INSPIRATION
+
+India Knows Six Seasons.
+
+VASANTA
+New Beginnings
+
+GRISHMA
+Heat & Radiance
+
+VARSHA
+Rain & Renewal
+
+SHARAD
+Clarity
+
+HEMANTA
+Golden Warmth
+
+SHISHIRA
+Stillness
+
+Animation के बाद:
+
+And Then, There Is One More.
+THE SIXTH RITU
+
+A season without a date.
+A season experienced through scent.
+
+Discover The Sixth Ritu →
+
+यह section scroll animation में बहुत premium बन सकता है—six season names एक-एक करके आते जाएँ और अंत में The Sixth Ritu reveal हो।
+
+8. BRAND PHILOSOPHY
+
+Small:
+
+OUR PHILOSOPHY
+
+Made to Be Worn.
+Created to Be Remembered.
+
+Every fragrance begins with a feeling.
+
+We translate that feeling through scent — bringing together Indian imagination, expressive perfume ingredients and a contemporary approach to luxury.
+
+Each creation is designed to unfold gradually on the skin, revealing its character over time.
+
+Like a season becoming a memory.
+
+CTA: Our Philosophy
+
+9. VISUAL CAMPAIGN / BANNER
+
+यहाँ large horizontal lifestyle/product banner रहेगा।
+
+Text minimal:
+
+A Memory Has No Season.
+
+Neither Should Your Fragrance.
+
+Explore The Collection
+
+10. SHOP BY CHARACTER
+
+इससे e-commerce aspect भी strong होगा।
+
+Find a Fragrance That Feels Like You.
+
+Fresh & Luminous
+Explore Crystal Bloom
+
+Warm & Addictive
+Explore Golden Ritual
+
+Deep & Powerful
+Explore Dark Monsoon
+
+Floral & Elegant
+Explore Flora Silk
+
+Rich & Regal
+Explore Royal Zafran Rose
+
+Bold & Refined
+Explore Golden Leaf
+
+11. THE ART OF FRAGRANCE
+More Than a Fragrance.
+A Personal Ritual.
+
+A fragrance becomes meaningful through the moments connected to it.
+
+A first impression.
+A familiar evening.
+A celebration.
+A journey.
+A person.
+
+The Sixth Ritu is created for those moments — fragrances designed to become part of your presence and, eventually, part of your memory.
+
+12. PRODUCT SHOWCASE / BESTSELLERS
+
+Heading:
+
+The Collection
+
+Subheading:
+
+Six expressions of one idea — luxury that stays with you.
+
+Product cards में:
+
+Product Image
+Product Name
+Short Character
+Extrait de Parfum • 50 ML
+Price
+Rating बाद में अगर genuine reviews हों
+Add to Bag
+Wishlist icon
+Quick View
+
+Fake “Best Seller” labels अभी नहीं डालेंगे।
+
+13. BRAND STATEMENT
+
+Full-width premium typography section:
+
+“We do not create fragrances merely to be worn.
+We create them to be remembered.”
+
+— The Sixth Ritu
+
+14. INSTAGRAM / SOCIAL SECTION
+Follow the Season
+
+@TheSixthRitu
+
+Discover our world of fragrance, rituals, stories and the moments that inspire each creation.
+
+Follow Our Journey
+
+नीचे animated Instagram/reel cards.
+
+15. NEWSLETTER
+
+Small:
+
+ENTER THE WORLD OF THE SIXTH RITU
+
+Stay in the Season.
+
+Be the first to discover new creations, private releases and stories from The Sixth Ritu.
+
+Your Email Address
+
+Join The Sixth Ritu
+
+Microcopy:
+
+By subscribing, you agree to receive communications from The Sixth Ritu.
+
+16. FOOTER
+THE SIXTH RITU
+
+The Season of Luxury
+
+Fragrances inspired by emotion, created to become memory.
+
+SHOP
+Shop All
+Dark Monsoon
+Royal Zafran Rose
+Golden Ritual
+Golden Leaf
+Crystal Bloom
+Flora Silk
+
+DISCOVER
+Our Story
+The Sixth Ritu
+Our Philosophy
+Contact Us
+
+CUSTOMER CARE
+Shipping & Delivery
+Returns & Exchanges
+FAQs
+Contact Us
+Track Order
+
+LEGAL
+Privacy Policy
+Terms & Conditions
+Refund Policy
+Shipping Policy
+
+FOLLOW
+Instagram
+Facebook
+YouTube
+
+Newsletter field.
+
+Bottom:
+
+© 2026 The Sixth Ritu. All Rights Reserved.
+
+PRODUCT PAGE CONTENT STRUCTURE
+
+हर perfume का page केवल normal e-commerce product page नहीं होना चाहिए।
+
+ऊपर:
+
+Product Name
+
+One-line signature statement
+
+Extrait de Parfum | 50 ML
+
+Price
+
+Short description
+
+Quantity
+
+ADD TO BAG
+
+BUY NOW
+
+Wishlist
+
+इसके नीचे:
+
+THE STORY
+
+उस fragrance की emotional story.
+
+THE CHARACTER
+
+Fresh / Warm / Deep / Floral आदि।
+
+THE NOTES
+
+Top Notes
+Client से exact notes मिलने पर
+
+Heart Notes
+Client से exact notes मिलने पर
+
+Base Notes
+Client से exact notes मिलने पर
+
+THE RITUAL
+
+When/how to wear का elegant content.
+
+THE EXPERIENCE
+
+Fragrance profile, mood और character.
+
+फिर:
+
+You May Also Like
+
+ABOUT PAGE
+
+हमने जो ऊपर refined About Us बनाया था उसी concept को यहाँ use करेंगे, लेकिन visual storytelling के साथ:
+
+01
+
+A Season Beyond the Six
+
+02
+
+Six Indian Seasons animated presentation
+
+03
+
+The Birth of The Sixth Ritu
+
+04
+
+Our Philosophy — Made to Be Remembered
+
+05
+
+Fragrance imagery / ingredient storytelling
+
+06
+
+Six Fragrances. One Philosophy.
+
+07
+
+Closing statement:
+
+Some Moments Pass.
+Others Become a Season of Their Own.
+
+The Sixth Ritu — The Season of Luxury.
+
+जरूरी WEBSITE PAGES
+
+Website को सिर्फ Home + Products तक सीमित नहीं रखेंगे। Full sellable e-commerce build में:
+
+Home
+Shop All
+Individual Product Pages × 6
+The Collection
+Our Story / About
+The Sixth Ritu / Brand Philosophy
+Contact
+Search
+Wishlist
+Cart
+Checkout
+Login / Create Account
+My Account
+Order History
+Track Order
+FAQ
+Shipping & Delivery
+Returns / Refund Policy
+Privacy Policy
+Terms & Conditions
+404 Page

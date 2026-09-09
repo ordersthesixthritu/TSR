@@ -1,0 +1,604 @@
+# THE SIXTH RITU — WEBSITE DESIGN & DEVELOPMENT GUIDELINES
+
+## PROJECT TYPE
+Premium luxury fragrance e-commerce website for The Sixth Ritu.
+
+The website must feel:
+- Premium
+- Elegant
+- Modern
+- Editorial
+- Dynamic
+- Interactive
+- Highly polished
+- Luxury-focused
+- Conversion-friendly
+
+This must NOT look like a generic e-commerce template.
+
+---
+
+# CORE DESIGN DIRECTION
+
+## Visual Style
+Use a primarily light luxury visual system.
+
+Preferred base:
+- Warm White
+- Ivory
+- Soft Cream
+- Champagne tones
+- Subtle Gold accents
+- Dark charcoal / near-black typography
+
+Avoid:
+- Full dark website
+- Heavy black backgrounds
+- Loud gradients
+- Neon colors
+- Excessive gold
+- Cheap-looking shadows
+- Over-designed cards
+- Generic Shopify-style layouts
+
+The overall design should feel sophisticated, spacious and editorial.
+
+---
+
+# RESPONSIVE DESIGN — STRICT REQUIREMENT
+
+The complete website must be fully responsive.
+
+It must be designed and tested for:
+
+- Large desktop screens
+- Standard laptops
+- Tablets
+- Small tablets
+- Large mobile devices
+- Standard mobile devices
+- Small mobile screens
+
+Suggested responsive breakpoints:
+
+- 1440px+
+- 1200px
+- 1024px
+- 768px
+- 640px
+- 480px
+- 375px
+
+No horizontal overflow is allowed on any screen.
+
+All text, images, buttons, cards, navigation, sliders and sections must resize and reposition naturally.
+
+---
+
+# MOBILE-FIRST QUALITY
+
+Mobile must NOT look like a compressed desktop website.
+
+Every major section should have a dedicated mobile layout.
+
+Mobile design must include:
+
+- Compact spacing
+- Proper typography scaling
+- Comfortable tap targets
+- Correct button sizes
+- Optimized cards
+- Clean product grids
+- Touch-friendly sliders
+- No text overflowing buttons
+- No broken headings
+- No overlapping elements
+- No unnecessary empty spaces
+- No oversized banners
+- No oversized product images
+- No excessive vertical scrolling caused by poor spacing
+
+Where desktop uses side-by-side content, mobile may stack intelligently.
+
+Where desktop uses large horizontal interaction, mobile should use swipeable or scrollable interaction where appropriate.
+
+---
+
+# DESKTOP EXPERIENCE
+
+Desktop must feel immersive and premium.
+
+Use:
+- Large editorial layouts
+- Controlled negative space
+- High-quality product presentation
+- Wide image areas
+- Luxury typography
+- Smooth hover interactions
+- Balanced section widths
+- Proper visual hierarchy
+
+Avoid extremely stretched sections on ultra-wide screens.
+
+Use sensible max-width containers.
+
+---
+
+# TABLET EXPERIENCE
+
+Tablet must be treated separately where needed.
+
+Do not simply inherit desktop layouts.
+
+Ensure:
+- Navigation remains usable
+- Product cards retain correct proportions
+- Text does not become too large
+- Two-column layouts remain balanced
+- Interactive sections remain touch-friendly
+
+---
+
+# ANIMATION SYSTEM
+
+The website must feel animated and alive, but animations must remain elegant.
+
+Luxury motion should feel:
+- Smooth
+- Slow
+- Controlled
+- Intentional
+- Premium
+
+Never make the website feel noisy or gimmicky.
+
+Possible animations:
+
+- Logo reveal on initial load
+- Hero text reveal
+- Text masking animation
+- Fade + slide content entrances
+- Soft image scale animation
+- Parallax product imagery
+- Product floating effects
+- Scroll-triggered reveals
+- Section transition animations
+- Animated divider lines
+- Subtle typography movement
+- Horizontal collection movement
+- Magnetic or soft hover buttons
+- Image hover zoom
+- Product card hover details
+- Smooth accordion animation
+- Smooth modal transitions
+- Page transitions
+- Cart drawer transitions
+- Mobile menu transitions
+
+Use animation only when it improves experience.
+
+---
+
+# SCROLL EXPERIENCE
+
+Scrolling should feel premium.
+
+Implement:
+- Smooth transitions
+- Scroll-triggered content
+- Staggered reveals where suitable
+- Subtle parallax
+- Proper scroll performance
+
+Do NOT make every element animate.
+
+Important content should remain easily readable.
+
+Animations must never delay shopping or navigation.
+
+---
+
+# HERO SECTION
+
+Homepage hero should feel visually strong.
+
+Preferred structure:
+- Full-width premium banner / slider
+- Strong brand statement
+- High-quality fragrance/product visual
+- Elegant typography
+- Minimal CTA
+- Subtle animated elements
+
+Hero can include:
+- 2–3 slides
+- Auto rotation
+- Manual arrows
+- Pagination indicators
+- Swipe support on mobile
+
+Hero animations may include:
+- Image slow zoom
+- Text reveal
+- Product fade/floating animation
+- Decorative line movement
+- Brand logo transition
+
+Mobile hero must have its own optimized layout.
+
+Do not simply crop desktop banners badly.
+
+---
+
+# HEADER
+
+Header must feel premium and clean.
+
+Desktop:
+- Logo
+- Main navigation
+- Search
+- Account
+- Wishlist
+- Shopping bag
+
+Allow subtle dropdown / mega-menu if required.
+
+Header behavior:
+- Transparent or light over initial hero if visually suitable
+- Becomes solid/sticky after scroll
+- Smooth transition
+- Maintain readable contrast
+
+Mobile:
+- Compact logo
+- Hamburger menu
+- Search
+- Cart
+- Clean animated drawer navigation
+
+Do not overload the mobile header.
+
+---
+
+# FOOTER
+
+Footer should feel designed, not like a default template.
+
+Include:
+- Logo / brand mark
+- Brand statement
+- Shop links
+- Discover links
+- Customer care
+- Legal links
+- Newsletter
+- Social links
+- Copyright
+
+Use strong alignment and generous but controlled spacing.
+
+---
+
+# TYPOGRAPHY
+
+Typography is a major part of the luxury identity.
+
+Use an elegant serif / display font for:
+- Hero headings
+- Editorial headings
+- Premium statements
+
+Use a highly readable modern sans-serif font for:
+- Navigation
+- Product information
+- Buttons
+- Paragraphs
+- Forms
+
+Typography must remain consistent across the entire website.
+
+Do not use too many font families.
+
+Avoid:
+- Extremely thin unreadable fonts
+- Oversized headings on mobile
+- Random typography styles
+- Poor line-height
+- Text touching screen edges
+
+---
+
+# PRODUCT CARDS
+
+Product cards should feel minimal and premium.
+
+Each card may include:
+- Product image
+- Product name
+- Short fragrance character
+- 50 ML / Extrait de Parfum
+- Price
+- Wishlist
+- Add to Bag
+- Quick View
+
+Card interactions:
+- Gentle image scale
+- Secondary product image if available
+- Smooth CTA reveal
+- Wishlist feedback
+- Quick-view modal
+
+Avoid overly boxed cards.
+
+The product image should remain the hero.
+
+---
+
+# PRODUCT DETAIL PAGE
+
+Product pages should feel like luxury campaign pages plus commerce.
+
+Desktop:
+- Large gallery
+- Sticky purchase information where appropriate
+- Product storytelling sections
+
+Mobile:
+- Swipeable gallery
+- Product info immediately accessible
+- Sticky/mobile purchase CTA if useful
+
+Include sections for:
+- Product title
+- Signature line
+- Price
+- Quantity
+- Add to Bag
+- Buy Now
+- Wishlist
+- Product story
+- Fragrance character
+- Notes
+- Ritual / usage
+- Experience
+- Related products
+
+Use accordions on mobile where useful.
+
+---
+
+# SHOP PAGE
+
+The shop must be clean and easy to browse.
+
+Include:
+- Product grid
+- Sort
+- Filters if required
+- Search
+- Collection information
+
+Desktop:
+3–4 columns depending on width.
+
+Tablet:
+2–3 columns.
+
+Mobile:
+Prefer 2 compact columns where usability allows.
+Use 1 column only if the design requires larger editorial cards.
+
+---
+
+# CART EXPERIENCE
+
+Prefer a premium slide-out cart drawer.
+
+Cart drawer should include:
+- Product image
+- Product name
+- Variant / size
+- Quantity controls
+- Remove
+- Price
+- Subtotal
+- Checkout CTA
+- Continue Shopping
+
+Mobile cart must remain compact.
+
+---
+
+# MICRO-INTERACTIONS
+
+Add refined feedback for:
+
+- Buttons
+- Links
+- Product cards
+- Wishlist
+- Add to Cart
+- Quantity controls
+- Search
+- Navigation
+- Dropdowns
+- Form fields
+- Newsletter
+- Accordion
+- Tabs
+
+Nothing should feel static or unfinished.
+
+---
+
+# IMAGE HANDLING
+
+Images are extremely important.
+
+Use:
+- High-quality imagery
+- Correct object-fit
+- Correct aspect ratio
+- Responsive images
+- Lazy loading where suitable
+
+Never:
+- Stretch images
+- Distort product bottles
+- Crop important product areas
+- Use low-quality placeholders in final design
+
+Until final banner images are supplied, use clean temporary placeholders that are easy to replace.
+
+---
+
+# PERFORMANCE
+
+Animations must not damage performance.
+
+Prioritize:
+- Optimized images
+- Lazy loading
+- Code splitting
+- Efficient animations
+- Minimal layout shifts
+- Fast loading
+- Good Lighthouse performance
+
+Use GPU-friendly animation properties where possible.
+
+Avoid excessive blur filters and heavy continuous animations.
+
+---
+
+# ACCESSIBILITY
+
+Maintain:
+- Good text contrast
+- Keyboard navigation
+- Visible focus states
+- Semantic HTML
+- Proper labels
+- Alt text
+- Accessible buttons
+- Reduced-motion support
+
+Respect:
+prefers-reduced-motion
+
+---
+
+# E-COMMERCE UX
+
+The shopping journey must remain simple.
+
+User should easily understand:
+
+Browse Product
+→ View Product
+→ Add to Bag
+→ Cart
+→ Checkout
+→ Confirmation
+
+Animation must never interfere with conversion.
+
+---
+
+# FORMS
+
+Forms must have:
+- Clear labels
+- Proper validation
+- Helpful error states
+- Success states
+- Loading indicators
+- Correct mobile keyboard types
+- Accessible inputs
+
+---
+
+# EMPTY / LOADING / ERROR STATES
+
+Design proper states for:
+
+- No search results
+- Empty cart
+- Empty wishlist
+- Loading products
+- Product unavailable
+- Form errors
+- Failed request
+- 404 page
+
+Do not leave default browser or framework states.
+
+---
+
+# DESIGN CONSISTENCY
+
+All pages must follow the same system for:
+
+- Typography
+- Border radius
+- Spacing
+- Buttons
+- Icons
+- Containers
+- Cards
+- Animations
+- Form fields
+- Colors
+- Shadows
+- Navigation
+
+Build reusable components instead of duplicating random styles.
+
+---
+
+# IMPORTANT QUALITY RULE
+
+Before considering any page complete, test it at all major screen sizes.
+
+Check specifically for:
+
+- Overflow
+- Text clipping
+- Incorrect wrapping
+- Broken grids
+- Poor image cropping
+- Oversized typography
+- Bad mobile spacing
+- Buttons exceeding their containers
+- Misaligned icons
+- Unnecessary blank space
+- Slow animations
+- Poor scroll behavior
+
+The final website must feel intentionally designed on every screen.
+
+---
+
+# FINAL DESIGN OBJECTIVE
+
+The Sixth Ritu website should feel like a digital fragrance experience rather than only an online shop.
+
+The final result should communicate:
+
+Indian inspiration
++
+Modern perfumery
++
+Quiet luxury
++
+Emotion
++
+Memory
++
+Premium e-commerce
+
+Every interaction should support the idea:
+
+"THE SIXTH RITU — THE SEASON OF LUXURY"

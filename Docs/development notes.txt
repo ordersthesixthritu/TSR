@@ -1,0 +1,1212 @@
+# THE SIXTH RITU — DEVELOPMENT NOTES
+
+## 1. PROJECT OBJECTIVE
+
+Build The Sixth Ritu as a production-quality, premium luxury fragrance e-commerce website.
+
+This project must NOT be treated as:
+- A static landing page
+- A generic HTML template
+- A basic Shopify-style storefront
+- A visual-only prototype
+- A desktop-only website
+
+The architecture must support a complete modern e-commerce experience and future backend integrations.
+
+Before development begins, read:
+
+1. `content.md`
+2. `design-system.md`
+3. `development-notes.md`
+
+Treat these files as the primary project specification.
+
+---
+
+# 2. RECOMMENDED TECHNOLOGY
+
+Preferred stack:
+
+- Next.js
+- React
+- TypeScript
+- Modern CSS architecture
+- GSAP where advanced scroll/timeline animation is required
+- Motion / Framer Motion for component and UI transitions
+- Swiper or an equivalent lightweight library for sliders where appropriate
+- Lucide React or another consistent lightweight icon system
+
+Use the current stable and mutually compatible package versions available in the project environment.
+
+Do not blindly install unnecessary dependencies.
+
+---
+
+# 3. NEXT.JS ARCHITECTURE
+
+Use modern Next.js architecture.
+
+Preferred structure:
+
+src/
+├── app/
+├── components/
+├── sections/
+├── data/
+├── lib/
+├── hooks/
+├── types/
+├── styles/
+└── utils/
+
+public/
+├── images/
+├── products/
+├── banners/
+├── brand/
+└── icons/
+
+Keep the project modular and maintainable.
+
+Do not put the complete homepage inside one massive component.
+
+---
+
+# 4. COMPONENT ARCHITECTURE
+
+Create reusable components.
+
+Examples:
+
+Header
+MobileNavigation
+AnnouncementBar
+HeroSlider
+SectionHeading
+ProductCard
+ProductGrid
+ProductSlider
+ProductQuickView
+WishlistButton
+AddToCartButton
+CartDrawer
+QuantitySelector
+FragranceMoodSelector
+StorySection
+EditorialBanner
+Newsletter
+Footer
+SearchOverlay
+LoadingState
+EmptyState
+ErrorState
+Accordion
+Modal
+
+Homepage sections should also be separated into reusable components.
+
+Avoid duplicated markup and duplicated CSS.
+
+---
+
+# 5. CONTENT SOURCE
+
+Use `content.md` as the main source of website copy.
+
+Do not rewrite approved brand copy unnecessarily.
+
+Do not generate random marketing claims.
+
+Do not invent:
+
+- Awards
+- Certifications
+- Customer counts
+- Reviews
+- Ratings
+- Discounts
+- Free shipping claims
+- Longevity claims
+- Ingredient percentages
+- Manufacturing claims
+- Dermatological claims
+- International shipping claims
+
+If information is unavailable, create an editable placeholder or omit it.
+
+---
+
+# 6. PRODUCT DATA ARCHITECTURE
+
+The initial collection contains six fragrances:
+
+1. Dark Monsoon
+2. Royal Zafran Rose
+3. Golden Ritual
+4. Golden Leaf
+5. Crystal Bloom
+6. Flora Silk
+
+Do NOT hard-code product markup independently across different pages.
+
+Create a central product data structure.
+
+Example fields:
+
+id
+slug
+name
+subtitle
+shortDescription
+description
+price
+compareAtPrice
+currency
+size
+concentration
+images
+hoverImage
+gallery
+mood
+family
+topNotes
+heartNotes
+baseNotes
+story
+ritual
+experience
+stock
+featured
+newArrival
+
+Product information should be editable from one central location until a backend/CMS is connected.
+
+---
+
+# 7. PRODUCT IMAGE RULE
+
+Actual supplied product images are priority assets.
+
+Map each supplied image to the correct fragrance.
+
+Never substitute an actual supplied product image with an AI-generated bottle.
+
+Never modify:
+- Product branding
+- Bottle shape
+- Packaging
+- Label
+- Logo
+- Product colour
+
+Do not distort product images.
+
+Use correct `object-fit` and aspect ratios.
+
+---
+
+# 8. PLACEHOLDER ASSET STRATEGY
+
+Some final campaign banners or lifestyle photography may not initially be available.
+
+In such cases:
+
+- Build the complete section
+- Use tasteful temporary imagery/placeholders
+- Keep assets replaceable
+- Do not make layout dependent on one temporary image
+
+All temporary content should be easy to identify and replace.
+
+Do not use ugly grey placeholder boxes in the visible premium UI.
+
+---
+
+# 9. ROUTES
+
+Prepare architecture for:
+
+/
+Home
+
+/shop
+Shop All
+
+/product/[slug]
+Dynamic Product Detail Page
+
+/collection
+The Collection
+
+/about
+Our Story
+
+/the-sixth-ritu
+Brand Philosophy
+
+/contact
+Contact
+
+/search
+Search
+
+/wishlist
+Wishlist
+
+/cart
+Cart
+
+/checkout
+Checkout
+
+/account
+Customer Account
+
+/account/orders
+Order History
+
+/track-order
+Track Order
+
+/faq
+FAQ
+
+/shipping
+Shipping & Delivery
+
+/returns
+Returns / Refunds
+
+/privacy
+Privacy Policy
+
+/terms
+Terms & Conditions
+
+Create a custom 404 experience.
+
+---
+
+# 10. HOMEPAGE ARCHITECTURE
+
+Build the homepage using independent sections.
+
+Recommended order:
+
+01. Announcement Bar
+02. Premium Header
+03. Hero Slider
+04. Brand Introduction
+05. Signature Collection
+06. Find Your Ritu
+07. Six Seasons Story
+08. Brand Philosophy
+09. Campaign / Editorial Banner
+10. Shop by Character
+11. Art of Fragrance
+12. Product Showcase
+13. Brand Statement
+14. Social / Instagram Section
+15. Newsletter
+16. Premium Footer
+
+Do not make every section visually identical.
+
+Create rhythm between:
+- Editorial sections
+- Product sections
+- Full-width visuals
+- Interactive sections
+- Typography-led sections
+- Storytelling sections
+
+---
+
+# 11. RESPONSIVE ENGINEERING
+
+Responsive behavior is mandatory.
+
+Do not build desktop first and simply stack everything on mobile.
+
+Test at approximately:
+
+375px
+390px
+430px
+480px
+640px
+768px
+1024px
+1280px
+1440px
+1920px
+
+Use fluid CSS where appropriate:
+
+clamp()
+min()
+max()
+minmax()
+CSS Grid
+Flexbox
+
+Avoid excessive hard-coded pixel positioning.
+
+---
+
+# 12. MOBILE IMPLEMENTATION
+
+Mobile experience is a first-class requirement.
+
+Mobile should feel almost like a premium shopping application.
+
+Requirements:
+
+- Compact header
+- Touch-friendly navigation
+- Swipeable hero
+- Swipeable galleries
+- Correct image ratios
+- Compact product cards
+- Proper typography hierarchy
+- Easy quantity controls
+- Accessible cart
+- Comfortable buttons
+- Optimized forms
+- Correct spacing
+- Sticky purchase CTA where useful
+
+Never allow:
+
+- Horizontal page overflow
+- Clipped headings
+- Tiny buttons
+- Text outside buttons
+- Desktop-sized empty spaces
+- Oversized typography
+- Broken two-column sections
+- Unusable hover-dependent interactions
+
+Any hover-only feature must have a touch alternative.
+
+---
+
+# 13. TABLET IMPLEMENTATION
+
+Tablet must not be ignored.
+
+At tablet widths, explicitly verify:
+
+- Header behavior
+- Navigation
+- Product grid
+- Hero composition
+- Editorial layouts
+- Sliders
+- Forms
+- Footer columns
+- Product page gallery
+
+Use tablet-specific layout adjustments where required.
+
+---
+
+# 14. ANIMATION ARCHITECTURE
+
+Animations should reinforce luxury.
+
+Use GSAP only where it provides meaningful benefit, such as:
+
+- ScrollTrigger sequences
+- Advanced text reveals
+- Controlled parallax
+- Timeline-based storytelling
+- Six Seasons transition
+- Premium hero sequences
+
+Use Motion / Framer Motion for:
+
+- Component entrance/exit
+- Menu transitions
+- Cart drawer
+- Modals
+- Hover/tap interactions
+- Small UI transitions
+- Page-level transitions where appropriate
+
+Do not use multiple animation libraries for the same simple effect.
+
+---
+
+# 15. ANIMATION PERFORMANCE
+
+Prefer animation of:
+
+transform
+opacity
+
+Avoid continuously animating expensive properties.
+
+Avoid excessive:
+- blur()
+- box-shadow animation
+- filter animation
+- huge background movement
+
+Do not create scroll-jacking.
+
+Native scrolling must remain predictable.
+
+Animations should never block:
+- Navigation
+- Add to Cart
+- Checkout
+- Forms
+- Product interaction
+
+---
+
+# 16. REDUCED MOTION
+
+Respect:
+
+`prefers-reduced-motion`
+
+Users requesting reduced motion should receive a stable and usable experience without essential information being hidden.
+
+---
+
+# 17. HERO ENGINEERING
+
+Hero must support multiple slides.
+
+Each slide should support:
+
+- Desktop image
+- Mobile image
+- Eyebrow
+- Heading
+- Supporting copy
+- Primary CTA
+- Secondary CTA
+- Alignment options
+
+Hero must support:
+
+- Auto rotation
+- Manual controls
+- Pagination
+- Touch/swipe
+- Pause when appropriate
+
+Avoid aggressive autoplay.
+
+Ensure hero content remains readable before JavaScript animation initializes.
+
+---
+
+# 18. HEADER BEHAVIOR
+
+Implement a polished responsive header.
+
+Desktop:
+- Announcement bar
+- Brand logo
+- Navigation
+- Search
+- Account
+- Wishlist
+- Cart
+
+Possible behavior:
+
+Top of page:
+Light / transparent presentation where appropriate.
+
+After scroll:
+Solid warm-white background
+Subtle border/shadow
+Compact sticky state
+
+Mobile:
+- Menu
+- Logo
+- Search where appropriate
+- Cart
+
+Use an animated drawer for navigation.
+
+Prevent body scrolling while mobile menu is open.
+
+---
+
+# 19. PRODUCT CARD ENGINEERING
+
+Create ONE reusable ProductCard system.
+
+Support:
+
+- Responsive image
+- Product name
+- Character
+- Size
+- Concentration
+- Price
+- Wishlist
+- Quick View
+- Add to Cart
+
+Do not duplicate separate product card implementations unnecessarily.
+
+Product card should gracefully work without:
+- Hover image
+- Rating
+- Discount
+- Badge
+
+---
+
+# 20. PRODUCT DETAIL PAGE
+
+Use dynamic routing.
+
+Product detail pages should be generated from the central product data source.
+
+Desktop:
+- Premium image gallery
+- Product information panel
+- Sticky information where appropriate
+
+Mobile:
+- Swipeable image gallery
+- Clear price and CTA
+- Compact details
+- Accordions where useful
+
+Below purchase area include:
+
+The Story
+The Character
+Fragrance Notes
+The Ritual
+The Experience
+Related Products
+
+Do not make the PDP look like a generic marketplace product page.
+
+---
+
+# 21. CART STATE
+
+Implement cart state in a way that can later connect to a real commerce backend.
+
+Required interactions:
+
+- Add product
+- Remove product
+- Increase quantity
+- Decrease quantity
+- Calculate subtotal
+- Open cart drawer
+- Empty cart state
+
+Persist cart locally where appropriate during frontend development.
+
+Keep business logic separated from UI components.
+
+---
+
+# 22. WISHLIST
+
+Implement frontend wishlist behavior.
+
+Support:
+
+- Add
+- Remove
+- Wishlist state feedback
+- Wishlist page
+- Empty state
+
+Persist locally during frontend phase if no backend exists.
+
+Structure it so authentication/backend persistence can be connected later.
+
+---
+
+# 23. SEARCH
+
+Search experience should support:
+
+- Search overlay or dedicated interface
+- Product name
+- Fragrance family
+- Mood
+- Notes where available
+
+Include:
+- Empty results state
+- Clear search
+- Keyboard accessibility
+- Mobile-friendly interface
+
+---
+
+# 24. CHECKOUT
+
+Do not invent a fake production payment system.
+
+During frontend development:
+
+Create complete checkout UI architecture but keep payment integration modular.
+
+Prepare for later integration with an appropriate payment gateway such as Razorpay or another approved provider.
+
+Checkout UI may include:
+
+- Contact information
+- Shipping address
+- Billing information
+- Order summary
+- Discount code field if required
+- Shipping method
+- Payment section
+- Place Order
+
+Never store sensitive payment/card data directly.
+
+---
+
+# 25. BACKEND READINESS
+
+Frontend architecture must remain ready for future integration with:
+
+- Authentication
+- Database
+- Product inventory
+- Orders
+- Payments
+- Coupons
+- Shipping
+- Email notifications
+- Customer accounts
+- Admin dashboard
+
+Do not tightly couple frontend UI to temporary mock data.
+
+Create a clean data/service layer.
+
+---
+
+# 26. SEO
+
+Use Next.js metadata capabilities.
+
+Each important page should support:
+
+- Unique title
+- Meta description
+- Canonical URL
+- Open Graph data
+- Social sharing image
+- Indexing configuration
+
+Product pages should have dynamic metadata.
+
+Use semantic headings.
+
+Only one logical primary H1 per page.
+
+Do not use heading tags purely for visual styling.
+
+---
+
+# 27. STRUCTURED DATA
+
+Prepare valid structured data where applicable:
+
+- Organization
+- Website
+- BreadcrumbList
+- Product
+
+Product schema must only contain real available information.
+
+Do not fabricate reviews or ratings for structured data.
+
+---
+
+# 28. IMAGE OPTIMIZATION
+
+Prefer Next.js image optimization where appropriate.
+
+Set:
+- Width
+- Height
+- Sizes
+- Priority only for critical above-the-fold images
+
+Lazy load below-the-fold images.
+
+Avoid cumulative layout shift.
+
+Do not load every homepage image at maximum resolution.
+
+---
+
+# 29. FONT PERFORMANCE
+
+Use optimized web fonts.
+
+Avoid loading excessive:
+- Families
+- Weights
+- Italics
+
+Preload only genuinely critical fonts.
+
+Typography must not create major layout shift.
+
+---
+
+# 30. ACCESSIBILITY
+
+Use semantic HTML.
+
+Required:
+
+- Alt text
+- Keyboard navigation
+- Focus states
+- ARIA only where needed
+- Accessible modal behavior
+- Accessible drawers
+- Form labels
+- Error messages
+- Proper buttons instead of clickable divs
+
+Do not sacrifice accessibility for visual effects.
+
+---
+
+# 31. FORMS
+
+Forms should include:
+
+- Client-side validation
+- Clear error messages
+- Loading state
+- Success state
+- Disabled state while submitting
+- Correct input types
+- Mobile-friendly inputs
+
+Prevent duplicate submissions.
+
+---
+
+# 32. CONTACT PAGE
+
+Prepare fields such as:
+
+Name
+Email
+Phone
+Subject
+Message
+
+Do not hard-code an unconfirmed business email, phone number or address.
+
+Use editable configuration placeholders until confirmed.
+
+---
+
+# 33. LOADING EXPERIENCE
+
+If a branded initial loader is used, keep it short.
+
+Possible concept:
+
+The Sixth Ritu logo / emblem appears elegantly,
+a fine line reveals,
+then the page enters.
+
+Do not force users to watch a long loader.
+
+Do not fake loading delays purely to show animation.
+
+---
+
+# 34. ERROR HANDLING
+
+Create polished UI states for:
+
+- 404
+- Network failure
+- Product not found
+- Search empty
+- Cart empty
+- Wishlist empty
+- Form error
+
+Never expose raw technical errors to customers.
+
+---
+
+# 35. CODE QUALITY
+
+Use:
+
+- TypeScript types
+- Clear naming
+- Reusable components
+- Small focused functions
+- Centralized constants
+- Clean imports
+- Sensible comments only where necessary
+
+Avoid:
+
+- Giant components
+- Copy-pasted sections
+- Hundreds of inline styles
+- Random magic numbers
+- Unused dependencies
+- Dead code
+- Console errors
+- Console warnings
+
+---
+
+# 36. CSS RULES
+
+Create a consistent design token system.
+
+Define variables/tokens for:
+
+- Background colors
+- Text colors
+- Gold/accent colors
+- Borders
+- Container widths
+- Spacing
+- Radius
+- Shadows
+- Typography
+- Transition speeds
+- Z-index layers
+
+Do not randomly choose values section by section.
+
+---
+
+# 37. GLOBAL CONTAINER SYSTEM
+
+Use consistent container widths.
+
+For example:
+
+Standard content container
+Wide editorial container
+Full-bleed container
+
+Sections should align intentionally.
+
+Do not allow every section to have unrelated left/right margins.
+
+---
+
+# 38. PERFORMANCE TARGET
+
+The final build should prioritize strong Core Web Vitals.
+
+Pay attention to:
+
+- LCP
+- CLS
+- INP
+
+Avoid making animation more important than loading performance.
+
+Above-the-fold assets should be optimized carefully.
+
+---
+
+# 39. CLIENT-SIDE JAVASCRIPT
+
+Do not convert the entire application into client components unnecessarily.
+
+Use server components where appropriate.
+
+Use client components only when interactivity requires them.
+
+This is important for:
+- Performance
+- SEO
+- Bundle size
+
+---
+
+# 40. SECURITY
+
+Never expose:
+
+- Secret API keys
+- Database service keys
+- Payment secrets
+- Admin credentials
+
+Use environment variables.
+
+Only expose explicitly safe public environment variables to the browser.
+
+Never commit `.env` secrets.
+
+---
+
+# 41. ENVIRONMENT CONFIGURATION
+
+Use `.env.example` to document required environment variables without real secrets.
+
+Example categories:
+
+NEXT_PUBLIC_SITE_URL
+Database configuration
+Authentication configuration
+Payment configuration
+Email configuration
+
+Actual values will be configured later.
+
+---
+
+# 42. DEVELOPMENT STATES
+
+During frontend development, mock data is acceptable.
+
+However:
+
+Mock data must live separately from UI code.
+
+Do not scatter temporary values throughout components.
+
+Mark anything requiring client confirmation clearly.
+
+---
+
+# 43. BROWSER QUALITY
+
+Ensure the website behaves correctly on current major browsers:
+
+- Chrome
+- Safari
+- Edge
+- Firefox
+- Mobile Safari
+- Chrome Android
+
+Do not rely on experimental features without suitable fallbacks.
+
+---
+
+# 44. FINAL RESPONSIVE AUDIT
+
+Before declaring frontend complete, manually inspect every important page at:
+
+375px
+390px
+430px
+768px
+1024px
+1280px
+1440px
+
+Check:
+
+- Header
+- Hero
+- Navigation
+- Typography
+- Product cards
+- Product galleries
+- Buttons
+- Sliders
+- Forms
+- Modals
+- Cart drawer
+- Footer
+- Animations
+- Spacing
+
+Fix issues rather than merely documenting them.
+
+---
+
+# 45. FINAL FUNCTIONAL AUDIT
+
+Test:
+
+- Navigation links
+- Product links
+- Search
+- Wishlist
+- Add to Cart
+- Remove from Cart
+- Quantity update
+- Cart subtotal
+- Quick View
+- Mobile menu
+- Hero controls
+- Sliders
+- Forms
+- Accordions
+- Modals
+- Responsive states
+
+There should be no dead UI controls.
+
+If a feature is intentionally awaiting backend integration, clearly separate the UI from the unfinished integration.
+
+---
+
+# 46. NO GENERIC TEMPLATE RULE
+
+This requirement is critical.
+
+Do NOT produce a website that looks like:
+
+- A default Tailwind template
+- A generic Shopify theme
+- A component-library demo
+- A basic AI-generated landing page
+
+The Sixth Ritu must have its own visual identity.
+
+Use the brand concept of:
+
+Six Indian seasons
++
+The imaginary Sixth Ritu
++
+Fragrance
++
+Memory
++
+Quiet luxury
+
+to influence visual storytelling.
+
+---
+
+# 47. DO NOT OVERDESIGN
+
+Premium does not mean adding more elements.
+
+Avoid:
+
+- Excessive glassmorphism
+- Random gradients
+- Excessive rounded cards
+- Constant animations
+- Too many icons
+- Decorative clutter
+- Giant text everywhere
+- Excessive shadows
+
+Prefer:
+
+- Strong typography
+- Negative space
+- Photography
+- Product imagery
+- Fine lines
+- Controlled gold detailing
+- Editorial composition
+- Sophisticated motion
+
+---
+
+# 48. FUTURE ADMIN / COMMERCE READINESS
+
+The frontend should be designed so that a future admin system can control:
+
+- Products
+- Prices
+- Inventory
+- Images
+- Orders
+- Coupons
+- Homepage banners
+- Featured products
+- Collection order
+- Customer information
+
+Do not build admin functionality during the initial frontend phase unless specifically requested.
+
+Just keep the architecture ready for it.
+
+---
+
+# 49. BUILD VALIDATION
+
+Before final handoff:
+
+Run the production build.
+
+Resolve:
+
+- Build errors
+- TypeScript errors
+- Broken imports
+- Missing assets
+- Hydration errors
+- Console errors
+- Major warnings
+- Broken routes
+
+Do not consider the task complete merely because development mode loads.
+
+---
+
+# 50. IMPORTANT IMPLEMENTATION RULE
+
+Do not make major creative assumptions when real brand/product information is missing.
+
+For factual information:
+USE PROVIDED DATA.
+
+For visual presentation:
+USE THE DESIGN SYSTEM.
+
+For website copy:
+USE `content.md`.
+
+For engineering:
+FOLLOW THIS FILE.
+
+If something is temporary, make it easily replaceable.
+
+---
+
+# FINAL ENGINEERING OBJECTIVE
+
+Build The Sixth Ritu as a scalable premium commerce frontend rather than a disposable visual prototype.
+
+The codebase should be:
+
+- Responsive
+- Dynamic
+- Animated
+- Fast
+- SEO-friendly
+- Accessible
+- Modular
+- Maintainable
+- Backend-ready
+- E-commerce-ready
+- Production-oriented
+
+The final experience should feel premium on desktop, tablet and mobile while preserving excellent usability and performance.
+
+THE SIXTH RITU
+The Season of Luxury.
