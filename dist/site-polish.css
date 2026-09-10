@@ -125,6 +125,15 @@ img { max-width: 100%; }
 .detail-accordions summary { min-height: 42px; align-items: center; }
 .detail-accordions summary:hover { color: var(--gold-deep); }
 
+.info-layout { width: min(calc(100% - 72px), 1180px); margin-inline: auto; padding-block: clamp(62px, 8vw, 115px); }
+.info-side { color: #3d3125; }
+.info-copy { font-size: 1.04rem; line-height: 1.78; }
+.info-copy h2 { margin-top: 2.25em; color: #33291f; }
+.search-box { padding-block: clamp(48px, 7vw, 90px); }
+.search-input { min-height: 68px; color: #2c241d; }
+.not-found, .empty { padding: clamp(48px, 8vw, 104px) 24px; }
+.not-found h1, .empty h3 { letter-spacing: -.05em; }
+
 /* Forms, support pages, cart and modal use the same restrained material language. */
 .field input, .field textarea, .email-form input, .search-input { transition: border-color .24s ease, background .24s ease; }
 .field input:focus, .field textarea:focus, .email-form input:focus, .search-input:focus { border-color: var(--gold-deep); }
@@ -150,6 +159,10 @@ img { max-width: 100%; }
 .footer-v2 .footer-top a { padding-block: 3px; transition: color .2s ease, transform .2s ease; }
 .footer-v2 .footer-top a:hover { color: var(--gold-deep); transform: translateX(3px); }
 .footer-v2 .footer-bottom { padding-block: 22px; }
+
+@media (min-width: 641px) {
+  .modal.open { transform: translate(-50%, -50%); }
+}
 
 @media (min-width: 1001px) {
   .product-summary { position: sticky; top: 112px; }
@@ -211,6 +224,15 @@ img { max-width: 100%; }
   .email-form { display: grid; grid-template-columns: 1fr; }
   .email-form button { min-height: 50px; }
   .footer-v2 .footer-bottom { display: grid; gap: 9px; font-size: .65rem; }
+  .info-layout { width: min(calc(100% - 38px), 560px); padding-block: 56px; }
+  .info-side { font-size: clamp(2.7rem, 13vw, 4rem); }
+  .info-copy { font-size: .98rem; }
+  .search-input { min-height: 58px; font-size: clamp(2rem, 11vw, 3.2rem); }
+  .modal { inset: auto 0 0; width: 100%; max-height: 86dvh; border: 0; border-top: 1px solid var(--line-soft); transform: translateY(110%); padding: 20px 18px 26px; }
+  .modal.open { transform: translateY(0); }
+  .quickview { grid-template-columns: .8fr 1fr; gap: 16px; }
+  .quickview img { height: 260px; }
+  .quickview h2 { font-size: 2.1rem; margin: 18px 0 8px; }
 }
 
 @media (max-width: 375px) {
