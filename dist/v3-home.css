@@ -65,6 +65,27 @@
 .announce-v3 .announce-center b,
 .announce-v3 .announce-center i { display: none; }
 
+/* Mobile fixed header for ALL pages */
+@media(max-width:1000px){
+  .announce-v2.announce-v3 { display: none !important; }
+  .header.header-v3 {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 90 !important;
+    display: grid !important;
+    grid-template-columns: auto 1fr auto !important;
+    align-items: center;
+    min-height: 56px;
+    padding: 0 16px;
+    background: rgba(250,247,240,.97) !important;
+    border-bottom: 1px solid rgba(184,139,67,.25);
+    backdrop-filter: blur(8px);
+  }
+  #app { padding-top: 56px; }
+}
+
 .header.header-v3.header-glass {
   position: fixed !important;
   top: 0 !important;
@@ -160,21 +181,21 @@
 .header-glass .header-count { background: var(--v3-gold); color: #fff; }
 .header-glass .header-nav-link:after { background: #fff; }
 
-/* Glass header — scrolled (solid background) */
-.header-glass.is-scrolled {
+/* Glass header — scrolled (solid background) — must beat .header.header-v3.header-glass specificity */
+.header.header-v3.header-glass.is-scrolled {
   background: rgba(255,255,255,0.97) !important;
   border-bottom-color: rgba(0,0,0,0.06) !important;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px) !important;
   box-shadow: 0 1px 8px rgba(0,0,0,0.06) !important;
 }
-.header-glass.is-scrolled .header-nav-link { color: var(--v3-ink, #30271f) !important; }
-.header-glass.is-scrolled .header-action,
-.header-glass.is-scrolled .icon-btn,
-.header-glass.is-scrolled .mobile-menu { color: var(--v3-ink, #30271f) !important; }
-.header-glass.is-scrolled .brand-v3 img { filter: none !important; }
-.header-glass.is-scrolled .header-rule-v3 { background: #d8bd8d !important; }
-.header-glass.is-scrolled .header-count { background: var(--v3-charcoal, #30271f); }
-.header-glass.is-scrolled .header-nav-link:after { background: var(--v3-gold, #b07c2b); }
+.header.header-v3.header-glass.is-scrolled .header-nav-link { color: var(--v3-ink, #30271f) !important; }
+.header.header-v3.header-glass.is-scrolled .header-action,
+.header.header-v3.header-glass.is-scrolled .icon-btn,
+.header.header-v3.header-glass.is-scrolled .mobile-menu { color: var(--v3-ink, #30271f) !important; }
+.header.header-v3.header-glass.is-scrolled .brand-v3 img { filter: none !important; }
+.header.header-v3.header-glass.is-scrolled .header-rule-v3 { background: #d8bd8d !important; }
+.header.header-v3.header-glass.is-scrolled .header-count { background: var(--v3-charcoal, #30271f); }
+.header.header-v3.header-glass.is-scrolled .header-nav-link:after { background: var(--v3-gold, #b07c2b); }
 
 .header-glass + .announce-v3,
 .header-glass ~ .announce-v3 { display: none !important; }
