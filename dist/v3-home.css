@@ -714,7 +714,7 @@
   .hdr-row1 { padding: 10px var(--v3-gutter); }
   .hdr-row1 .brand-v3 img { height: 32px !important; }
 
-  .v3-hero { min-height: 420px; height: 68svh; margin: 0 clamp(10px, 2.5vw, 16px); border-radius: 8px; }
+  .v3-hero { min-height: 420px; height: 68svh; margin: -56px clamp(10px, 2.5vw, 16px) 0; border-radius: 8px; }
   .v3-hero-content h1 { font-size: clamp(2rem, 8vw, 2.6rem); }
   .v3-hero-sub { font-size: 0.82rem; }
   .v3-hero-ctas { flex-direction: column; align-items: center; gap: 10px; }
