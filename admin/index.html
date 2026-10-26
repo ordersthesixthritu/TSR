@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>The Sixth Ritu — Admin</title>
+<link rel="icon" href="/logo.png"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ivory:#f7f4ed;--charcoal:#1a1815;--ink:#27251f;--gold:#a27d4e;--gold-light:#c9a96e;
+  --serif:'Cormorant Garamond',serif;--sans:'DM Sans',sans-serif;
+  --sidebar-w:240px;--header-h:56px;
+  --success:#2a7d4e;--warning:#c5930a;--danger:#b5302a;--info:#2a6db5;
+}
+body{font:400 .875rem/1.5 var(--sans);color:var(--ink);background:#f0ede6;min-height:100vh}
+a{color:var(--gold);text-decoration:none}
+button{font-family:var(--sans);cursor:pointer}
+input,select,textarea{font-family:var(--sans);font-size:.8125rem}
+
+/* Login */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--ivory)}
+.login-card{background:#fff;padding:48px 40px;max-width:400px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+.login-card img{width:64px;display:block;margin:0 auto 16px}
+.login-card h1{font:300 1.6rem/1.2 var(--serif);text-align:center;margin-bottom:4px;color:var(--charcoal)}
+.login-card .sub{text-align:center;font-size:.72rem;letter-spacing:.12em;color:var(--gold);margin-bottom:28px;text-transform:uppercase}
+.login-card label{display:block;font-size:.7rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#888;margin-bottom:6px;margin-top:16px}
+.login-card input{width:100%;height:44px;border:1px solid rgba(162,125,78,.3);background:transparent;padding:0 14px;outline:none}
+.login-card input:focus{border-color:var(--gold)}
+.login-card .btn{width:100%;height:46px;background:var(--charcoal);color:var(--ivory);border:none;font-weight:600;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;margin-top:24px;transition:background .2s}
+.login-card .btn:hover{background:var(--gold)}
+.login-card .error{color:var(--danger);font-size:.75rem;margin-top:12px;text-align:center;display:none}
+
+/* Shell */
+.shell{display:none;min-height:100vh}
+.shell.active{display:grid;grid-template-columns:var(--sidebar-w) 1fr;grid-template-rows:var(--header-h) 1fr}
+
+/* Sidebar */
+.sidebar{grid-row:1/-1;background:var(--charcoal);color:rgba(255,255,255,.7);display:flex;flex-direction:column;overflow-y:auto}
+.sidebar-brand{padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:12px}
+.sidebar-brand img{width:36px;filter:brightness(10)}
+.sidebar-brand span{font:500 .85rem/1.2 var(--serif);color:#fff;letter-spacing:.04em}
+.sidebar-nav{flex:1;padding:12px 0}
+.sidebar-nav button{display:flex;align-items:center;gap:10px;width:100%;padding:10px 20px;background:none;border:none;color:rgba(255,255,255,.6);font-size:.78rem;font-weight:500;text-align:left;transition:all .15s;border-left:3px solid transparent}
+.sidebar-nav button:hover{color:#fff;background:rgba(255,255,255,.04)}
+.sidebar-nav button.active{color:var(--gold-light);background:rgba(162,125,78,.1);border-left-color:var(--gold)}
+.sidebar-nav button svg{width:18px;height:18px;flex-shrink:0;opacity:.7}
+.sidebar-nav button.active svg{opacity:1}
+.sidebar-foot{padding:16px 20px;border-top:1px solid rgba(255,255,255,.08);font-size:.68rem;color:rgba(255,255,255,.35)}
+.sidebar-foot button{background:none;border:none;color:rgba(255,255,255,.5);font-size:.72rem;cursor:pointer;padding:0}
+.sidebar-foot button:hover{color:var(--gold-light)}
+
+/* Header */
+.top-bar{background:#fff;border-bottom:1px solid rgba(0,0,0,.06);display:flex;align-items:center;justify-content:space-between;padding:0 28px}
+.top-bar h2{font:400 1.1rem/1 var(--serif);color:var(--charcoal)}
+.top-bar .admin-name{font-size:.75rem;color:#888}
+
+/* Content */
+.content{padding:28px;overflow-y:auto;max-height:calc(100vh - var(--header-h))}
+
+/* Cards */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:#fff;padding:22px 20px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.stat-card .label{font-size:.68rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#999;margin-bottom:6px}
+.stat-card .value{font:500 1.7rem/1.2 var(--serif);color:var(--charcoal)}
+.stat-card .note{font-size:.65rem;color:#aaa;margin-top:4px}
+
+/* Tables */
+.card{background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.04);margin-bottom:20px}
+.card-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgba(0,0,0,.06)}
+.card-head h3{font:400 1rem/1.2 var(--serif);color:var(--charcoal)}
+table{width:100%;border-collapse:collapse}
+th{font-size:.68rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#999;text-align:left;padding:10px 16px;border-bottom:1px solid rgba(0,0,0,.06)}
+td{padding:10px 16px;border-bottom:1px solid rgba(0,0,0,.03);font-size:.8rem;vertical-align:middle}
+tr:hover td{background:rgba(247,244,237,.5)}
+.badge{display:inline-block;font-size:.62rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:3px 10px;border-radius:2px}
+.badge-success{background:rgba(42,125,78,.1);color:var(--success)}
+.badge-warning{background:rgba(197,147,10,.1);color:var(--warning)}
+.badge-danger{background:rgba(181,48,42,.1);color:var(--danger)}
+.badge-info{background:rgba(42,109,181,.1);color:var(--info)}
+.badge-neutral{background:rgba(0,0,0,.05);color:#888}
+.badge-gold{background:rgba(162,125,78,.1);color:var(--gold)}
+.stars{color:var(--gold);letter-spacing:1px}
+.verified-badge{display:inline-flex;align-items:center;gap:3px;font-size:.62rem;font-weight:600;color:var(--success);text-transform:uppercase;letter-spacing:.04em}
+.verified-badge svg{width:12px;height:12px}
+
+/* Buttons */
+.btn{height:36px;padding:0 18px;border:none;font-size:.7rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;transition:all .15s}
+.btn-primary{background:var(--charcoal);color:var(--ivory)}
+.btn-primary:hover{background:var(--gold)}
+.btn-outline{background:transparent;border:1.5px solid var(--charcoal);color:var(--charcoal)}
+.btn-outline:hover{background:var(--charcoal);color:var(--ivory)}
+.btn-sm{height:30px;padding:0 12px;font-size:.65rem}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-danger:hover{background:#8b1a15}
+.btn-icon{width:30px;height:30px;padding:0;display:inline-flex;align-items:center;justify-content:center;background:none;border:1px solid rgba(0,0,0,.1);color:#888}
+.btn-icon:hover{border-color:var(--gold);color:var(--gold)}
+
+/* Modal */
+.modal-backdrop{position:fixed;inset:0;background:rgba(26,24,21,.5);z-index:1000;display:none;align-items:flex-start;justify-content:center;padding:60px 20px;overflow-y:auto;backdrop-filter:blur(2px)}
+.modal-backdrop.open{display:flex}
+.modal{background:#fff;max-width:560px;width:100%;padding:32px;position:relative;box-shadow:0 16px 64px rgba(0,0,0,.15)}
+.modal h3{font:400 1.2rem/1.2 var(--serif);color:var(--charcoal);margin-bottom:20px}
+.modal .close{position:absolute;top:12px;right:14px;background:none;border:none;font-size:1.4rem;color:#888;cursor:pointer}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:.68rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#888;margin-bottom:5px}
+.form-group input,.form-group select,.form-group textarea{width:100%;height:40px;border:1px solid rgba(0,0,0,.12);padding:0 12px;outline:none;font-size:.8rem;background:#fff}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--gold)}
+.form-group textarea{height:100px;padding:10px 12px;resize:vertical}
+.form-group .hint{font-size:.65rem;color:#aaa;margin-top:3px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid rgba(0,0,0,.06)}
+.toggle{position:relative;width:38px;height:20px;background:#ccc;border-radius:10px;cursor:pointer;transition:background .2s;border:none;padding:0;flex-shrink:0}
+.toggle.on{background:var(--success)}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:left .2s}
+.toggle.on::after{left:20px}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;background:var(--charcoal);color:var(--ivory);font-size:.78rem;z-index:2000;transform:translateY(80px);opacity:0;transition:all .3s ease;max-width:360px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.error{background:var(--danger)}
+
+/* Loading */
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid rgba(162,125,78,.2);border-top-color:var(--gold);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-row{text-align:center;padding:40px;color:#aaa}
+
+/* Empty state */
+.empty-state{text-align:center;padding:48px 20px;color:#aaa}
+.empty-state p{font-size:.85rem;margin-bottom:16px}
+
+/* Product image in table */
+.prod-thumb{width:40px;height:40px;object-fit:cover;border:1px solid rgba(0,0,0,.06)}
+
+/* Responsive */
+@media(max-width:900px){
+  :root{--sidebar-w:56px}
+  .sidebar-brand span,.sidebar-nav button span,.sidebar-foot{display:none}
+  .sidebar-nav button{justify-content:center;padding:12px 0}
+  .sidebar-brand{justify-content:center;padding:16px 8px}
+}
+@media(max-width:640px){
+  .shell.active{grid-template-columns:1fr;grid-template-rows:var(--header-h) 1fr}
+  .sidebar{position:fixed;left:-260px;width:260px;z-index:500;transition:left .3s}
+  .sidebar.open{left:0}
+  .content{padding:16px}
+  .form-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="login-screen" class="login-wrap">
+  <div class="login-card">
+    <img src="/logo.png" alt="The Sixth Ritu"/>
+    <h1>Admin Panel</h1>
+    <p class="sub">The Season of Luxury</p>
+    <form id="login-form">
+      <label>Email</label>
+      <input type="email" id="login-email" required autocomplete="email"/>
+      <label>Password</label>
+      <input type="password" id="login-password" required autocomplete="current-password"/>
+      <button type="submit" class="btn">Sign In</button>
+      <p class="error" id="login-error"></p>
+    </form>
+  </div>
+</div>
+
+<!-- Admin Shell -->
+<div id="shell" class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <img src="/logo.png" alt="TSR"/>
+      <span>The Sixth Ritu</span>
+    </div>
+    <nav class="sidebar-nav" id="nav"></nav>
+    <div class="sidebar-foot">
+      <button id="logout-btn">Sign Out</button>
+    </div>
+  </aside>
+  <div class="top-bar">
+    <h2 id="page-title">Dashboard</h2>
+    <span class="admin-name" id="admin-name"></span>
+  </div>
+  <main class="content" id="main"></main>
+</div>
+
+<!-- Modal Container -->
+<div class="modal-backdrop" id="modal-backdrop">
+  <div class="modal" id="modal"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '/api/admin';
+let token = sessionStorage.getItem('tsr-admin-token');
+let adminUser = null;
+let currentPage = 'dashboard';
+
+const NAV_ITEMS = [
+  { id:'dashboard',  label:'Dashboard',     icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>' },
+  { id:'products',   label:'Products',      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>' },
+  { id:'orders',     label:'Orders',        icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>' },
+  { id:'coupons',    label:'Coupons',       icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>' },
+  { id:'reviews',    label:'Reviews',       icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>' },
+  { id:'popups',     label:'Popups',        icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></svg>' },
+  { id:'pages',      label:'Pages',         icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>' },
+  { id:'media',      label:'Media Library',  icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>' },
+  { id:'leads',      label:'Leads',         icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>' },
+  { id:'settings',   label:'Settings',      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>' },
+];
+
+// ── API helpers ──
+async function api(path, opts = {}) {
+  const headers = { ...opts.headers };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  if (opts.body && !(opts.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+    opts.body = JSON.stringify(opts.body);
+  }
+  const res = await fetch(API + path, { ...opts, headers });
+  if (res.status === 401) { logout(); throw new Error('Unauthorized'); }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || `Request failed (${res.status})`);
+  }
+  return res.json();
+}
+
+function toast(msg, isError = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => el.className = 'toast', 3000);
+}
+
+// ── Auth ──
+document.getElementById('login-form').onsubmit = async (e) => {
+  e.preventDefault();
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+  try {
+    const data = await fetch(API + '/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: document.getElementById('login-email').value,
+        password: document.getElementById('login-password').value
+      })
+    }).then(r => r.json());
+    if (data.token) {
+      token = data.token;
+      sessionStorage.setItem('tsr-admin-token', token);
+      adminUser = data.admin;
+      showShell();
+    } else {
+      errEl.textContent = data.error || 'Invalid credentials';
+      errEl.style.display = 'block';
+    }
+  } catch {
+    errEl.textContent = 'Could not connect to server.';
+    errEl.style.display = 'block';
+  }
+};
+
+function logout() {
+  token = null;
+  adminUser = null;
+  sessionStorage.removeItem('tsr-admin-token');
+  document.getElementById('shell').className = 'shell';
+  document.getElementById('login-screen').style.display = '';
+}
+
+document.getElementById('logout-btn').onclick = logout;
+
+async function showShell() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('shell').className = 'shell active';
+  if (!adminUser) {
+    try { adminUser = await api('/me'); } catch { logout(); return; }
+  }
+  document.getElementById('admin-name').textContent = adminUser.name || adminUser.email;
+  buildNav();
+  navigate('dashboard');
+}
+
+// ── Navigation ──
+function buildNav() {
+  const nav = document.getElementById('nav');
+  nav.innerHTML = NAV_ITEMS.map(item =>
+    `<button data-page="${item.id}" class="${item.id === currentPage ? 'active' : ''}">${item.icon}<span>${item.label}</span></button>`
+  ).join('');
+  nav.querySelectorAll('button').forEach(btn => {
+    btn.onclick = () => navigate(btn.dataset.page);
+  });
+}
+
+function navigate(page) {
+  currentPage = page;
+  const item = NAV_ITEMS.find(n => n.id === page);
+  document.getElementById('page-title').textContent = item ? item.label : page;
+  document.querySelectorAll('.sidebar-nav button').forEach(b => b.classList.toggle('active', b.dataset.page === page));
+  renderPage(page);
+}
+
+// ── Page Router ──
+async function renderPage(page) {
+  const main = document.getElementById('main');
+  main.innerHTML = '<div class="loading-row"><span class="spinner"></span></div>';
+  try {
+    switch (page) {
+      case 'dashboard': await renderDashboard(main); break;
+      case 'products':  await renderProducts(main); break;
+      case 'orders':    await renderOrders(main); break;
+      case 'coupons':   await renderCoupons(main); break;
+      case 'reviews':   await renderReviews(main); break;
+      case 'popups':    await renderPopups(main); break;
+      case 'pages':     await renderPages(main); break;
+      case 'media':     await renderMedia(main); break;
+      case 'leads':     await renderLeads(main); break;
+      case 'settings':  await renderSettings(main); break;
+    }
+  } catch (err) {
+    main.innerHTML = `<div class="empty-state"><p>Error loading ${page}: ${err.message}</p></div>`;
+  }
+}
+
+// ── Modal helpers ──
+function openModal(html) {
+  document.getElementById('modal').innerHTML = html;
+  document.getElementById('modal-backdrop').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modal-backdrop').classList.remove('open');
+}
+document.getElementById('modal-backdrop').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+// ── Formatting ──
+function fmtPrice(paise) { return '₹' + (paise / 100).toLocaleString('en-IN'); }
+function fmtDate(d) { return d ? new Date(d).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '—'; }
+function statusBadge(status) {
+  const map = { paid:'success', pending:'warning', shipped:'info', delivered:'success', cancelled:'danger', refunded:'neutral', failed:'danger' };
+  return `<span class="badge badge-${map[status] || 'neutral'}">${status}</span>`;
+}
+function starStr(n) { return '<span class="stars">' + '★'.repeat(n) + '☆'.repeat(5 - n) + '</span>'; }
+
+// ── Dashboard ──
+async function renderDashboard(el) {
+  const data = await api('/dashboard');
+  el.innerHTML = `
+    <div class="stats">
+      <div class="stat-card"><div class="label">Total Orders</div><div class="value">${data.orderCount ?? 0}</div></div>
+      <div class="stat-card"><div class="label">Revenue</div><div class="value">${fmtPrice(data.revenue ?? 0)}</div><div class="note">Reflects verified payments only</div></div>
+      <div class="stat-card"><div class="label">Active Products</div><div class="value">${data.productCount ?? 0}</div></div>
+      <div class="stat-card"><div class="label">Leads</div><div class="value">${data.leadCount ?? 0}</div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Recent Orders</h3></div>
+      ${data.recentOrders?.length ? `<table><thead><tr><th>Order #</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr></thead><tbody>
+        ${data.recentOrders.map(o => `<tr><td>${o.order_number || o.id}</td><td>${esc(o.customer_name || '—')}</td><td>${fmtPrice(o.total)}</td><td>${statusBadge(o.status)}</td><td>${fmtDate(o.created_at)}</td></tr>`).join('')}
+      </tbody></table>` : '<div class="empty-state"><p>No orders yet.</p></div>'}
+    </div>`;
+}
+
+// ── Products ──
+async function renderProducts(el) {
+  const products = await api('/products');
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-head"><h3>Products</h3><button class="btn btn-primary btn-sm" onclick="openProductModal()">+ Add Product</button></div>
+      ${products.length ? `<table><thead><tr><th></th><th>Name</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+        ${products.map(p => `<tr>
+          <td><img class="prod-thumb" src="${esc(p.image)}" alt="${esc(p.name)}"/></td>
+          <td><strong>${esc(p.name)}</strong><br/><small style="color:#999">${esc(p.slug)}</small></td>
+          <td>${fmtPrice(p.price)}</td>
+          <td>${p.active ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-neutral">Draft</span>'}</td>
+          <td><button class="btn-icon" onclick="openProductModal(${p.id})" title="Edit">&#9998;</button> <button class="btn-icon" onclick="deleteProduct(${p.id})" title="Delete" style="color:var(--danger)">&#10005;</button></td>
+        </tr>`).join('')}
+      </tbody></table>` : '<div class="empty-state"><p>No products yet.</p><button class="btn btn-primary" onclick="openProductModal()">Add First Product</button></div>'}
+    </div>`;
+}
+
+window.openProductModal = async function(id) {
+  let p = { name:'', slug:'', subtitle:'', character:'', notes:'', description:'', price:149900, image:'', mood:'', active:1 };
+  if (id) { try { p = await api(`/products/${id}`); } catch(e) { toast(e.message, true); return; } }
+  openModal(`
+    <button class="close" onclick="closeModal()">&times;</button>
+    <h3>${id ? 'Edit' : 'Add'} Product</h3>
+    <form id="product-form">
+      <div class="form-row">
+        <div class="form-group"><label>Name</label><input name="name" value="${esc(p.name)}" required/></div>
+        <div class="form-group"><label>Slug</label><input name="slug" value="${esc(p.slug)}" required/><div class="hint">URL-safe, e.g. dark-monsoon</div></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Subtitle</label><input name="subtitle" value="${esc(p.subtitle || '')}"/></div>
+        <div class="form-group"><label>Character</label><input name="character" value="${esc(p.character || '')}"/><div class="hint">e.g. Deep &bull; Earthy &bull; Mysterious</div></div>
+      </div>
+      <div class="form-group"><label>Notes</label><input name="notes" value="${esc(p.notes || '')}"/></div>
+      <div class="form-group"><label>Description</label><textarea name="description">${esc(p.description || '')}</textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Price (paise)</label><input name="price" type="number" value="${p.price}" required/><div class="hint">149900 = ₹1,499</div></div>
+        <div class="form-group"><label>Mood</label><input name="mood" value="${esc(p.mood || '')}"/></div>
+      </div>
+      <div class="form-group"><label>Image Path</label><input name="image" value="${esc(p.image || '')}"/></div>
+      <div class="form-group"><label>Active</label><select name="active"><option value="1" ${p.active ? 'selected' : ''}>Active</option><option value="0" ${!p.active ? 'selected' : ''}>Draft</option></select></div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">${id ? 'Save Changes' : 'Create Product'}</button>
+      </div>
+    </form>
+  `);
+  document.getElementById('product-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const body = Object.fromEntries(fd);
+    body.price = Number(body.price);
+    body.active = Number(body.active);
+    try {
+      await api(id ? `/products/${id}` : '/products', { method: id ? 'PUT' : 'POST', body });
+      closeModal(); toast(id ? 'Product updated.' : 'Product created.');
+      renderProducts(document.getElementById('main'));
+    } catch (err) { toast(err.message, true); }
+  };
+};
+
+window.deleteProduct = async function(id) {
+  openModal(`
+    <button class="close" onclick="closeModal()">&times;</button>
+    <h3>Delete Product</h3>
+    <p style="margin-bottom:20px">Are you sure? This cannot be undone.</p>
+    <div class="form-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger" id="confirm-delete">Delete</button>
+    </div>
+  `);
+  document.getElementById('confirm-delete').onclick = async () => {
+    try {
+      await api(`/products/${id}`, { method: 'DELETE' });
+      closeModal(); toast('Product deleted.');
+      renderProducts(document.getElementById('main'));
+    } catch (err) { toast(err.message, true); }
+  };
+};
+
+// ── Orders ──
+async function renderOrders(el) {
+  const orders = await api('/orders');
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-head"><h3>Orders</h3></div>
+      ${orders.length ? `<table><thead><tr><th>Order #</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>
+        ${orders.map(o => {
+          let items = '—';
+          try { const parsed = JSON.parse(o.items); items = parsed.map(i => i.slug).join(', '); } catch {}
+          return `<tr>
+            <td>${o.order_number || o.id}</td>
+            <td>${esc(o.customer_name || '—')}<br/><small style="color:#999">${esc(o.customer_phone || '')}</small></td>
+            <td><small>${esc(items)}</small></td>
+            <td>${fmtPrice(o.total)}</td>
+            <td>${statusBadge(o.status)}</td>
+            <td>${fmtDate(o.created_at)}</td>
+            <td><button class="btn-icon" onclick="openOrderModal(${o.id})" title="View">&#128065;</button></td>
+          </tr>`;
+        }).join('')}
+      </tbody></table>` : '<div class="empty-state"><p>No orders yet.</p></div>'}
+    </div>`;
+}
+
+window.openOrderModal = async function(id) {
+  let o;
+  try { o = await api(`/orders/${id}`); } catch(e) { toast(e.message, true); return; }
+  let items = [];
+  try { items = JSON.parse(o.items); } catch {}
+  openModal(`
+    <button class="close" onclick="closeModal()">&times;</button>
+    <h3>Order #${o.order_number || o.id}</h3>
+    <div style="margin-bottom:16px">
+      <p><strong>Customer:</strong> ${esc(o.customer_name || '—')}</p>
+      <p><strong>Email:</strong> ${esc(o.customer_email || '—')}</p>
+      <p><strong>Phone:</strong> ${esc(o.customer_phone || '—')}</p>
+      <p><strong>Address:</strong> ${esc(o.shipping_address || '—')}</p>
+    </div>
+    <table><thead><tr><th>Item</th><th>Qty</th></tr></thead><tbody>
+      ${items.map(i => `<tr><td>${esc(i.slug || i.name || '—')}</td><td>${i.qty}</td></tr>`).join('')}
+    </tbody></table>
+    <div style="margin-top:12px">
+      <p><strong>Subtotal:</strong> ${fmtPrice(o.subtotal || 0)}</p>
+      ${o.discount ? `<p><strong>Discount:</strong> -${fmtPrice(o.discount)}${o.coupon_used ? ' (' + esc(o.coupon_used) + ')' : ''}</p>` : ''}
+      <p><strong>Total:</strong> ${fmtPrice(o.total)}</p>
+    </div>
+    <div class="form-group" style="margin-top:16px">
+      <label>Update Status</label>
+      <select id="order-status">
+        ${['pending','paid','shipped','delivered','cancelled','refunded'].map(s => `<option value="${s}" ${o.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+      </select>
+      <div class="hint">Only update to reflect real fulfillment status.</div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Close</button>
+      <button class="btn btn-primary" id="save-order-status">Update Status</button>
+    </div>
+  `);
+  document.getElementById('save-order-status').onclick = async () => {
+    try {
+      await api(`/orders/${id}`, { method: 'PUT', body: { status: document.getElementById('order-status').value } });
+      closeModal(); toast('Order status updated.');
+      renderOrders(document.getElementById('main'));
+    } catch (err) { toast(err.message, true); }
+  };
+};
+
+// ── Coupons ──
+async function renderCoupons(el) {
+  const coupons = await api('/coupons');
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-head"><h3>Coupons</h3><button class="btn btn-primary btn-sm" onclick="openCouponModal()">+ Add Coupon</button></div>
+      ${coupons.length ? `<table><thead><tr><th>Code</th><th>Discount</th><th>Min Cart</th><th>Uses</th><th>Active</th><th>Expires</th><th>Actions</th></tr></thead><tbody>
+        ${coupons.map(c => `<tr>
+          <td><strong>${esc(c.code)}</strong></td>
+          <td>${fmtPrice(c.discount_amount)}</td>
+          <td>${fmtPrice(c.min_cart)}</td>
+          <td>${c.current_uses}${c.max_uses ? '/' + c.max_uses : ''}</td>
+          <td>${c.active ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-neutral">Inactive</span>'}</td>
+          <td>${fmtDate(c.expires_at)}</td>
+          <td><button class="btn-icon" onclick="openCouponModal(${c.id})" title="Edit">&#9998;</button> <button class="btn-icon" onclick="deleteCoupon(${c.id})" title="Delete" style="color:var(--danger)">&#10005;</button></td>
+        </tr>`).join('')}
+      </tbody></table>` : '<div class="empty-state"><p>No coupons yet.</p></div>'}
+    </div>`;
+}
+
+window.openCouponModal = async function(id) {
+  let c = { code:'', discount_amount:0, min_cart:0, max_uses:'', current_uses:0, active:1, expires_at:'' };
+  if (id) { try { c = await api(`/coupons/${id}`); } catch(e) { toast(e.message, true); return; } }
+  openModal(`
+    <button class="close" onclick="closeModal()">&times;</button>
+    <h3>${id ? 'Edit' : 'Add'} Coupon</h3>
+    <form id="coupon-form">
+      <div class="form-row">
+        <div class="form-group"><label>Code</label><input name="code" value="${esc(c.code)}" required style="text-transform:uppercase"/></div>
+        <div class="form-group"><label>Discount (paise)</label><input name="discount_amount" type="number" value="${c.discount_amount}" required/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Min Cart (paise)</label><input name="min_cart" type="number" value="${c.min_cart}"/></div>
+        <div class="form-group"><label>Max Uses</label><input name="max_uses" type="number" value="${c.max_uses || ''}" placeholder="Unlimited"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Active</label><select name="active"><option value="1" ${c.active ? 'selected' : ''}>Active</option><option value="0" ${!c.active ? 'selected' : ''}>Inactive</option></select></div>
+        <div class="form-group"><label>Expires</label><input name="expires_at" type="date" value="${c.expires_at ? c.expires_at.split('T')[0] : ''}"/></div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">${id ? 'Save' : 'Create'}</button>
+      </div>
+    </form>
+  `);
+  document.getElementById('coupon-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const body = Object.fromEntries(fd);
+    body.code = body.code.toUpperCase();
+    body.discount_amount = Number(body.discount_amount);
+    body.min_cart = Number(body.min_cart || 0);
+    body.max_uses = body.max_uses ? Number(body.max_uses) : null;
+    body.active = Number(body.active);
+    body.expires_at = body.expires_at || null;
+    try {
+      await api(id ? `/coupons/${id}` : '/coupons', { method: id ? 'PUT' : 'POST', body });
+      closeModal(); toast(id ? 'Coupon updated.' : 'Coupon created.');
+      renderCoupons(document.getElementById('main'));
+    } catch (err) { toast(err.message, true); }
+  };
+};
+
+window.deleteCoupon = async function(id) {
+  openModal(`
+    <button class="close" onclick="closeModal()">&times;</button>
+    <h3>Delete Coupon</h3>
+    <p style="margin-bottom:20px">Are you sure?</p>
+    <div class="form-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger" id="confirm-delete-coupon">Delete</button>
+    </div>
+  `);
+  document.getElementById('confirm-delete-coupon').onclick = async () => {
+    try {
+      await api(`/coupons/${id}`, { method: 'DELETE' });
+      closeModal(); toast('Coupon deleted.');
+      renderCoupons(document.getElementById('main'));
+    } catch (err) { toast(err.message, true); }
+  };
+};
+
+// ── Reviews ──
+async function renderReviews(el) {
+  const reviews = await api('/reviews');
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-head"><h3>Reviews</h3></div>
+      ${reviews.length ? `<table><thead><tr><th>Product</th><th>Customer</th><th>Rating</th><th>Review</th><th>Verified</th><th>Approved</th><th>Date</th></tr></thead><tbody>
+        ${reviews.map(r => `<tr>
+          <td>${esc(r.product_slug)}</td>
+          <td>${esc(r.customer_name)}</td>
+          <td>${starStr(r.rating)}</td>
+          <td><small>${esc((r.text || '').substring(0, 80))}${(r.text || '').length > 80 ? '...' : ''}</small></td>
+          <td>${r.verified_purchase ? '<span class="verified-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Verified</span>' : '<span class="badge badge-neutral">Unverified</span>'}</td>
+          <td><button class="toggle ${r.approved ? 'on' : ''}" onclick="toggleReviewApproval(${r.id},${r.approved ? 0 : 1})"></button></td>
+          <td>${fmtDate(r.created_at)}</td>
+        </tr>`).join('')}
+      </tbody></table>` : '<div class="empty-state"><p>No reviews yet.</p></div>'}
+    </div>
+    <p style="font-size:.7rem;color:#aaa;margin-top:-12px">Verified purchase status is set automatically based on order history and cannot be changed manually.</p>`;
+}
+
+window.toggleReviewApproval = async function(id, approved) {
+  try {
+    await api(`/reviews/${id}`, { method: 'PUT', body: { approved } });
+    toast(approved ? 'Review approved.' : 'Review hidden.');
+    renderReviews(document.getElementById('main'));
+  } catch (err) { toast(err.message, true); }
+};
+
+// ── Popups ──
+async function renderPopups(el) {
+  const popups = await api('/popups');
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-head"><h3>Popups</h3><button class="btn btn-primary btn-sm" onclick="openPopupModal()">+ Add Popup</button></div>
+      ${popups.length ? `<table><thead><tr><th>Title</th><th>Type</th><th>Active</th><th>Created</th><th>Actions</th></tr></thead><tbody>
+        ${popups.map(p => `<tr>
+          <td>${esc(p.title)}</td>
+          <td><span class="badge badge-gold">${esc(p.type || 'general')}</span></td>
+          <td><button class="toggle ${p.active ? 'on' : ''}" onclick="togglePopup(${p.id},${p.active ? 0 : 1})"></button></td>
+          <td>${fmtDate(p.created_at)}</td>
+          <td><button class="btn-icon" onclick="openPopupModal(${p.id})" title="Edit">&#9998;</button> <button class="btn-icon" onclick="deleteItem('popups',${p.id})" title="Delete" style="color:var(--danger)">&#10005;</button></td>
+        </tr>`).join('')}
+      </tbody></table>` : '<div class="empty-state"><p>No popups configured.</p></div>'}
+    </div>`;
+}
+
+window.openPopupModal = async function(id) {
+  let p = { title:'', type:'welcome', content:'{}', active:1 };
+  if (id) { try { p = await api(`/popups/${id}`); } catch(e) { toast(e.message, true); return; } }
+  openModal(`
+    <button class="close" onclick="closeModal()">&times;</button>
+    <h3>${id ? 'Edit' : 'Add'} Popup</h3>
+    <form id="popup-form">
+      <div class="form-group"><label>Title</label><input name="title" value="${esc(p.title)}" required/></div>
+      <div class="form-row">
+        <div class="form-group"><label>Type</label><select name="type"><option value="welcome" ${p.type==='welcome'?'selected':''}>Welcome</option><option value="promo" ${p.type==='promo'?'selected':''}>Promo</option><option value="exit" ${p.type==='exit'?'selected':''}>Exit Intent</option></select></div>
+        <div class="form-group"><label>Active</label><select name="active"><option value="1" ${p.active?'selected':''}>Active</option><option value="0" ${!p.active?'selected':''}>Inactive</option></select></div>
+      </div>
+      <div class="form-group"><label>Content (JSON)</label><textarea name="content">${esc(typeof p.content === 'string' ? p.content : JSON.stringify(p.content, null, 2))}</textarea></div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">${id ? 'Save' : 'Create'}</button>
+      </div>
+    </form>
+  `);
+  document.getElementById('popup-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const body = Object.fromEntries(fd);
+    body.active = Number(body.active);
+    try { body.content = JSON.parse(body.content); } catch { toast('Invalid JSON in content field.', true); return; }
+    try {
+      await api(id ? `/popups/${id}` : '/popups', { method: id ? 'PUT' : 'POST', body });
+      closeModal(); toast(id ? 'Popup updated.' : 'Popup created.');
+      renderPopups(document.getElementById('main'));
+    } catch (err) { toast(err.message, true); }
+  };
+};
+
+window.togglePopup = async function(id, active) {
+  try {
+    await api(`/popups/${id}`, { method: 'PUT', body: { active } });
+    toast(active ? 'Popup activated.' : 'Popup deactivated.');
+    renderPopups(document.getElementById('main'));
+  } catch (err) { toast(err.message, true); }
+};
+
+// ── Pages ──
+async function renderPages(el) {
+  const pages = await api('/pages');
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-head"><h3>Pages</h3><button class="btn btn-primary btn-sm" onclick="openPageModal()">+ Add Page</button></div>
+      ${pages.length ? `<table><thead><tr><th>Title</th><th>Slug</th><th>Published</th><th>Updated</th><th>Actions</th></tr></thead><tbody>
+        ${pages.map(p => `<tr>
+          <td>${esc(p.title)}</td>
+          <td><small>/${esc(p.slug)}</small></td>
+          <td>${p.published ? '<span class="badge badge-success">Published</span>' : '<span class="badge badge-neutral">Draft</span>'}</td>
+          <td>${fmtDate(p.updated_at)}</td>
+          <td><button class="btn-icon" onclick="openPageModal(${p.id})" title="Edit">&#9998;</button> <button class="btn-icon" onclick="deleteItem('pages',${p.id})" title="Delete" style="color:var(--danger)">&#10005;</button></td>
+        </tr>`).join('')}
+      </tbody></table>` : '<div class="empty-state"><p>No custom pages yet.</p></div>'}
+    </div>`;
+}
+
+window.openPageModal = async function(id) {
+  let p = { title:'', slug:'', content:'{}', published:0 };
+  if (id) { try { p = await api(`/pages/${id}`); } catch(e) { toast(e.message, true); return; } }
+  openModal(`
+    <button class="close" onclick="closeModal()">&times;</button>
+    <h3>${id ? 'Edit' : 'Add'} Page</h3>
+    <form id="page-form">
+      <div class="form-row">
+        <div class="form-group"><label>Title</label><input name="title" value="${esc(p.title)}" required/></div>
+        <div class="form-group"><label>Slug</label><input name="slug" value="${esc(p.slug)}" required/></div>
+      </div>
+      <div class="form-group"><label>Content (JSON)</label><textarea name="content" style="height:180px">${esc(typeof p.content === 'string' ? p.content : JSON.stringify(p.content, null, 2))}</textarea></div>
+      <div class="form-group"><label>Published</label><select name="published"><option value="1" ${p.published?'selected':''}>Published</option><option value="0" ${!p.published?'selected':''}>Draft</option></select></div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">${id ? 'Save' : 'Create'}</button>
+      </div>
+    </form>
+  `);
+  document.getElementById('page-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const body = Object.fromEntries(fd);
+    body.published = Number(body.published);
+    try { body.content = JSON.parse(body.content); } catch { toast('Invalid JSON.', true); return; }
+    try {
+      await api(id ? `/pages/${id}` : '/pages', { method: id ? 'PUT' : 'POST', body });
+      closeModal(); toast(id ? 'Page updated.' : 'Page created.');
+      renderPages(document.getElementById('main'));
+    } catch (err) { toast(err.message, true); }
+  };
+};
+
+// ── Media Library ──
+async function renderMedia(el) {
+  const media = await api('/media');
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-head"><h3>Media Library</h3>
+        <label class="btn btn-primary btn-sm" style="cursor:pointer">
+          + Upload <input type="file" id="media-upload" accept="image/*,video/*,.webp,.svg" style="display:none" multiple/>
+        </label>
+      </div>
+      ${media.length ? `<table><thead><tr><th></th><th>Filename</th><th>Type</th><th>Size</th><th>Uploaded</th><th>Actions</th></tr></thead><tbody>
+        ${media.map(m => `<tr>
+          <td>${m.mime_type?.startsWith('image') ? `<img class="prod-thumb" src="${esc(m.path)}" alt="${esc(m.alt_text || '')}"/>` : '<span class="badge badge-neutral">File</span>'}</td>
+          <td><small>${esc(m.original_name)}</small></td>
+          <td><small>${esc(m.mime_type)}</small></td>
+          <td><small>${(m.size / 1024).toFixed(1)} KB</small></td>
+          <td>${fmtDate(m.created_at)}</td>
+          <td><button class="btn-icon" onclick="deleteItem('media',${m.id})" title="Delete" style="color:var(--danger)">&#10005;</button></td>
+        </tr>`).join('')}
+      </tbody></table>` : '<div class="empty-state"><p>No media uploaded.</p></div>'}
+    </div>`;
+  document.getElementById('media-upload').onchange = async function() {
+    for (const file of this.files) {
+      const fd = new FormData();
+      fd.append('file', file);
+      try {
+        await api('/media', { method: 'POST', body: fd, headers: {} });
+        toast(`Uploaded ${file.name}`);
+      } catch (err) { toast(err.message, true); }
+    }
+    renderMedia(el);
+  };
+}
+
+// ── Leads ──
+async function renderLeads(el) {
+  const leads = await api('/leads');
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-head"><h3>Leads</h3></div>
+      ${leads.length ? `<table><thead><tr><th>Name</th><th>Phone</th><th>DOB</th><th>Source</th><th>Date</th></tr></thead><tbody>
+        ${leads.map(l => `<tr>
+          <td>${esc(l.name)}</td>
+          <td>${esc(l.phone)}</td>
+          <td>${l.dob || '—'}</td>
+          <td><span class="badge badge-gold">${esc(l.source || 'popup')}</span></td>
+          <td>${fmtDate(l.created_at)}</td>
+        </tr>`).join('')}
+      </tbody></table>` : '<div class="empty-state"><p>No leads captured yet.</p></div>'}
+    </div>`;
+}
+
+// ── Settings ──
+async function renderSettings(el) {
+  let settings = {};
+  try { settings = await api('/settings'); } catch {}
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-head"><h3>Site Settings</h3></div>
+      <form id="settings-form" style="padding:20px">
+        <div class="form-group"><label>Site Name</label><input name="site_name" value="${esc(settings.site_name || 'The Sixth Ritu')}"/></div>
+        <div class="form-group"><label>Tagline</label><input name="tagline" value="${esc(settings.tagline || 'The Season of Luxury')}"/></div>
+        <div class="form-group"><label>Contact Email</label><input name="contact_email" type="email" value="${esc(settings.contact_email || '')}"/></div>
+        <div class="form-group"><label>Contact Phone</label><input name="contact_phone" value="${esc(settings.contact_phone || '')}"/></div>
+        <div class="form-group"><label>Instagram URL</label><input name="instagram" value="${esc(settings.instagram || '')}"/></div>
+        <div class="form-group"><label>Announcement Bar Text</label><input name="announcement" value="${esc(settings.announcement || '')}"/></div>
+        <div class="form-group"><label>Free Shipping Threshold (paise)</label><input name="free_shipping_threshold" type="number" value="${settings.free_shipping_threshold || 0}"/></div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Save Settings</button>
+        </div>
+      </form>
+    </div>`;
+  document.getElementById('settings-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const body = Object.fromEntries(fd);
+    body.free_shipping_threshold = Number(body.free_shipping_threshold || 0);
+    try {
+      await api('/settings', { method: 'PUT', body });
+      toast('Settings saved.');
+    } catch (err) { toast(err.message, true); }
+  };
+}
+
+// ── Generic delete ──
+window.deleteItem = async function(resource, id) {
+  openModal(`
+    <button class="close" onclick="closeModal()">&times;</button>
+    <h3>Delete Item</h3>
+    <p style="margin-bottom:20px">Are you sure? This cannot be undone.</p>
+    <div class="form-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger" id="confirm-generic-delete">Delete</button>
+    </div>
+  `);
+  document.getElementById('confirm-generic-delete').onclick = async () => {
+    try {
+      await api(`/${resource}/${id}`, { method: 'DELETE' });
+      closeModal(); toast('Deleted.');
+      renderPage(currentPage);
+    } catch (err) { toast(err.message, true); }
+  };
+};
+
+// ── Escape HTML ──
+function esc(s) {
+  if (s == null) return '';
+  const d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+
+// ── Boot ──
+if (token) { showShell(); }
+</script>
+</body>
+</html>
