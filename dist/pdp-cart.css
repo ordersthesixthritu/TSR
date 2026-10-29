@@ -397,6 +397,18 @@
   }
 }
 
+/* ── Flat Notes Display ── */
+.notes-flat {
+  text-align: center;
+  padding: clamp(16px, 2vw, 32px) 0;
+}
+.notes-flat .notes-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
 /* ── Reviews Section Premium ── */
 .product-reviews {
   border-top: 1px solid var(--line, #ddd5c8);

@@ -1303,7 +1303,7 @@
 .tsr-popup-visual-logo {
   width: 56px;
   margin-bottom: 10px;
-  filter: brightness(10);
+  filter: brightness(0) saturate(100%) invert(48%) sepia(80%) saturate(450%) hue-rotate(15deg) brightness(85%);
 }
 .tsr-popup-visual-tag {
   font: 400 .7rem/1 var(--v3-serif, 'Cormorant Garamond', serif);
@@ -1786,4 +1786,18 @@
   .about-season-list span { min-width: 90px; padding: 12px 14px; }
   .about-founders-card { padding: 28px 20px; }
   .about-collection-grid .v3-prod-card { text-align: left; }
+  .about-section p {
+    text-align: left;
+    line-height: 1.9;
+    margin-bottom: 16px;
+    font-size: clamp(0.82rem, 2.2vw, 0.88rem);
+  }
+  .about-hero-intro {
+    text-align: left;
+    line-height: 1.8;
+  }
+  .about-ritu-intro,
+  .about-ritu-close {
+    text-align: left;
+  }
 }
