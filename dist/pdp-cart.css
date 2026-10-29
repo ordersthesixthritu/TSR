@@ -18,14 +18,32 @@
   top: 100px;
   background: #f1ede6;
   min-height: 580px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   overflow: hidden;
 }
 
-.product-gallery img {
+.gallery-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.gallery-track::-webkit-scrollbar {
+  display: none;
+}
+
+.gallery-slide {
+  flex: 0 0 100%;
+  min-width: 100%;
+  min-height: 580px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  scroll-snap-align: start;
+}
+
+.gallery-slide img {
   width: 82%;
   max-height: 600px;
   object-fit: contain;
@@ -33,18 +51,64 @@
   transition: transform .4s cubic-bezier(.25,.46,.45,.94);
 }
 
-.product-gallery img.pdp-infographic {
+.gallery-slide img.pdp-infographic {
   width: 100%;
   max-height: none;
   filter: none;
-  margin-top: 24px;
-  border-radius: 0;
-  transition: none;
 }
 
-.product-gallery:hover img:not(.pdp-infographic) {
+.gallery-slide:hover img:not(.pdp-infographic) {
   transform: scale(1.04);
 }
+
+.gallery-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 0;
+}
+
+.gallery-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--v3-gold, #a27d4e);
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  transition: background .3s;
+}
+
+.gallery-dot.active {
+  background: var(--v3-gold, #a27d4e);
+}
+
+.gallery-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,0.85);
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--v3-charcoal, #1a1815);
+  transition: opacity .3s;
+  opacity: 0;
+  z-index: 2;
+}
+
+.product-gallery:hover .gallery-arrow {
+  opacity: 1;
+}
+
+.gallery-prev { left: 12px; }
+.gallery-next { right: 12px; }
 
 /* ── Product Summary ── */
 .product-summary {
@@ -272,6 +336,65 @@
   padding: 5px 14px;
   border: 1px solid var(--line, #ddd5c8);
   color: var(--muted, #8a8477);
+}
+
+/* ── Notes Breakdown Section ── */
+.pdp-notes-breakdown {
+  border-top: 1px solid var(--line, #ddd5c8);
+  padding-top: 60px;
+}
+
+.pdp-notes-breakdown .section-head {
+  margin-bottom: clamp(28px, 4vw, 48px);
+}
+
+.notes-pyramid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(24px, 3vw, 48px);
+}
+
+.notes-layer {
+  text-align: center;
+  padding: clamp(20px, 2.5vw, 32px);
+  border: 1px solid var(--line, #ddd5c8);
+}
+
+.notes-layer h3 {
+  font: 500 0.65rem/1 var(--v3-sans, 'DM Sans', sans-serif);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--v3-gold, #a27d4e);
+  margin: 0 0 8px;
+}
+
+.notes-layer-sub {
+  font: 400 0.72rem/1.4 var(--v3-sans, 'DM Sans', sans-serif);
+  color: var(--muted, #8a8477);
+  margin: 0 0 16px;
+}
+
+.notes-pyramid .notes-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.notes-pyramid .note-tag {
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  padding: 5px 14px;
+  border: 1px solid var(--line, #ddd5c8);
+  color: var(--muted, #8a8477);
+}
+
+@media (max-width: 768px) {
+  .notes-pyramid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
 }
 
 /* ── Reviews Section Premium ── */
@@ -890,18 +1013,28 @@ body.cart-open {
   .product-gallery {
     position: relative;
     top: auto;
-    min-height: 400px;
+    min-height: 360px;
   }
 
-  .product-gallery img {
+  .gallery-slide {
+    min-height: 360px;
+  }
+
+  .gallery-slide img {
     width: 70%;
     max-height: 420px;
   }
 
-  .product-gallery img.pdp-infographic {
+  .gallery-slide img.pdp-infographic {
     width: 100%;
     max-height: none;
-    margin-top: 16px;
+  }
+
+  .gallery-arrow {
+    opacity: 1;
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
   }
 
   .product-summary {
@@ -988,15 +1121,19 @@ body.cart-open {
 
 @media (max-width: 480px) {
   .product-gallery {
-    min-height: 320px;
+    min-height: 280px;
   }
 
-  .product-gallery img {
+  .gallery-slide {
+    min-height: 280px;
+  }
+
+  .gallery-slide img {
     width: 65%;
     max-height: 340px;
   }
 
-  .product-gallery img.pdp-infographic {
+  .gallery-slide img.pdp-infographic {
     width: 100%;
     max-height: none;
   }
