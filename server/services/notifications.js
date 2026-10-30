@@ -185,7 +185,7 @@ export async function queueOrderConfirmation(order) {
       ${order.payment_method === 'cod' ? '<p style="color:#6b6560;margin:0;font-size:13px;">Payment will be collected at delivery.</p>' : ''}
 
       <hr style="border:none;border-top:1px solid #e8e4dd;margin:24px 0;">
-      <p style="color:#6b6560;font-size:13px;margin:0;">If you have any questions, reply to this email or reach us at care@thesixthritu.in</p>
+      <p style="color:#6b6560;font-size:13px;margin:0;">If you have any questions, reply to this email or reach us at orders.thesixthritu@gmail.com</p>
     </div>
     <div style="background:#1a1815;padding:20px;text-align:center;">
       <p style="color:#a27d4e;font-size:12px;margin:0;letter-spacing:1px;">THE SIXTH RITU — THE SEASON OF LUXURY</p>
@@ -243,7 +243,7 @@ export async function queueInvoiceEmail(order, pdfBuffer) {
     <div style="padding:24px;">
       <p>Dear ${esc(order.customer_name)},</p>
       <p>Please find attached your GST invoice for order <strong>${esc(order.order_number)}</strong>.</p>
-      <p style="color:#6b6560;font-size:13px;margin-top:24px;">This is an automatically generated invoice. For questions, reach us at care@thesixthritu.in</p>
+      <p style="color:#6b6560;font-size:13px;margin-top:24px;">This is an automatically generated invoice. For questions, reach us at orders.thesixthritu@gmail.com</p>
     </div>
   </div>`;
 

@@ -35,11 +35,16 @@ async function validateCart(items) {
 
 async function validateCoupon(code, cartTotal) {
   if (!code) return 0;
-  const c = await db.prepare('SELECT discount_amount, min_cart, max_uses, current_uses, active, expires_at FROM coupons WHERE code = ?').get(code.toUpperCase());
+  const c = await db.prepare('SELECT discount_amount, discount_type, max_discount, min_cart, max_uses, current_uses, active, expires_at FROM coupons WHERE code = ?').get(code.toUpperCase());
   if (!c || !c.active) return 0;
   if (c.max_uses > 0 && c.current_uses >= c.max_uses) return 0;
   if (c.expires_at && new Date(c.expires_at) < new Date()) return 0;
   if (cartTotal < c.min_cart) return 0;
+  if (c.discount_type === 'percentage') {
+    let discount = Math.round(cartTotal * c.discount_amount / 100);
+    if (c.max_discount > 0 && discount > c.max_discount) discount = c.max_discount;
+    return discount;
+  }
   return c.discount_amount;
 }
 

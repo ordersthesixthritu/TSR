@@ -103,12 +103,12 @@ router.get('/coupons/validate', async (req, res) => {
     const code = (req.query.code || '').toUpperCase().trim();
     if (!code) return res.status(400).json({ error: 'Code required' });
     const row = await db.prepare(
-      'SELECT code, discount_amount, min_cart, max_uses, current_uses, active, expires_at FROM coupons WHERE code = ?'
+      'SELECT code, discount_amount, discount_type, max_discount, min_cart, max_uses, current_uses, active, expires_at FROM coupons WHERE code = ?'
     ).get(code);
     if (!row || !row.active) return res.json({ valid: false });
     if (row.max_uses > 0 && row.current_uses >= row.max_uses) return res.json({ valid: false });
     if (row.expires_at && new Date(row.expires_at) < new Date()) return res.json({ valid: false });
-    res.json({ valid: true, code: row.code, discount: row.discount_amount, minCart: row.min_cart });
+    res.json({ valid: true, code: row.code, discount: row.discount_amount, discountType: row.discount_type || 'fixed', maxDiscount: row.max_discount || 0, minCart: row.min_cart });
   } catch (err) {
     res.status(500).json({ error: 'Could not validate coupon' });
   }

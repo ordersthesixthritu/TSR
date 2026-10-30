@@ -6,7 +6,8 @@ export async function initDatabase() {
     "SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename = 'admins'"
   ).get();
   if (schemaCheck) {
-    console.log('Database: schema already exists — skipping DDL');
+    console.log('Database: schema already exists — running migrations');
+    await runMigrations();
     return;
   }
   console.log('Database: creating schema...');
@@ -78,6 +79,8 @@ export async function initDatabase() {
       id SERIAL PRIMARY KEY,
       code TEXT UNIQUE NOT NULL,
       discount_amount INTEGER NOT NULL DEFAULT 0,
+      discount_type TEXT NOT NULL DEFAULT 'fixed',
+      max_discount INTEGER NOT NULL DEFAULT 0,
       min_cart INTEGER NOT NULL DEFAULT 0,
       max_uses INTEGER NOT NULL DEFAULT 0,
       current_uses INTEGER NOT NULL DEFAULT 0,
@@ -276,13 +279,43 @@ async function seedProducts() {
   console.log('Seeded 6 products');
 }
 
+async function runMigrations() {
+  try {
+    const colCheck = await db.prepare(
+      "SELECT column_name FROM information_schema.columns WHERE table_name = 'coupons' AND column_name = 'discount_type'"
+    ).get();
+    if (!colCheck) {
+      await db.exec("ALTER TABLE coupons ADD COLUMN discount_type TEXT NOT NULL DEFAULT 'fixed'");
+      await db.exec("ALTER TABLE coupons ADD COLUMN max_discount INTEGER NOT NULL DEFAULT 0");
+      console.log('Migration: added discount_type and max_discount to coupons');
+    }
+  } catch (err) {
+    console.error('Migration error:', err.message);
+  }
+  await seedCoupons();
+}
+
 async function seedCoupons() {
   const existing = await db.prepare('SELECT id FROM coupons WHERE code = ?').get('TSR200');
-  if (existing) return;
+  if (!existing) {
+    await db.prepare(
+      "INSERT INTO coupons (code, discount_amount, discount_type, min_cart, max_uses, active) VALUES (?, ?, 'fixed', ?, ?, ?)"
+    ).run('TSR200', 20000, 149900, 0, 1);
+    console.log('Seeded coupon TSR200');
+  }
 
-  await db.prepare(
-    'INSERT INTO coupons (code, discount_amount, min_cart, max_uses, active) VALUES (?, ?, ?, ?, ?)'
-  ).run('TSR200', 20000, 149900, 0, 1);
-
-  console.log('Seeded coupon TSR200');
+  const familyCoupons = [
+    ['BST', 30],
+    ['SKV', 30],
+    ['PPV', 30],
+  ];
+  for (const [code, pct] of familyCoupons) {
+    const exists = await db.prepare('SELECT id FROM coupons WHERE code = ?').get(code);
+    if (!exists) {
+      await db.prepare(
+        "INSERT INTO coupons (code, discount_amount, discount_type, min_cart, max_uses, active) VALUES (?, ?, 'percentage', ?, ?, ?)"
+      ).run(code, pct, 0, 0, 1);
+      console.log(`Seeded family coupon ${code} (${pct}%)`);
+    }
+  }
 }
