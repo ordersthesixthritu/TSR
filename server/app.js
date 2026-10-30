@@ -8,6 +8,7 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import { initDatabase } from './db/schema.js';
 import paymentRoutes from './routes/payments.js';
 import adminRoutes from './routes/admin.js';
@@ -58,6 +59,14 @@ app.use(cors({
 
 app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json());
+
+const apiLimiter = rateLimit({ windowMs: 60_000, max: 100, standardHeaders: true, legacyHeaders: false });
+const loginLimiter = rateLimit({ windowMs: 15 * 60_000, max: 5, message: { error: 'Too many login attempts — try again later' } });
+const orderLimiter = rateLimit({ windowMs: 60_000, max: 10, message: { error: 'Too many requests — try again later' } });
+
+app.use('/api/', apiLimiter);
+app.use('/api/admin/login', loginLimiter);
+app.use('/api/payments/create-order', orderLimiter);
 
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
