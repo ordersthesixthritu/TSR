@@ -151,11 +151,55 @@ router.get('/orders', authenticate, async (req, res) => {
   try {
     const limit = Math.min(parseInt(req.query.limit) || 50, 200);
     const offset = parseInt(req.query.offset) || 0;
-    const rows = await db.prepare('SELECT * FROM orders ORDER BY created_at DESC LIMIT ? OFFSET ?').all(limit, offset);
-    const total = (await db.prepare('SELECT COUNT(*) as count FROM orders').get()).count;
+    const { status, payment_method, payment_status, search, date } = req.query;
+
+    let where = [];
+    let params = [];
+
+    if (status) { where.push('status = ?'); params.push(status); }
+    if (payment_method) { where.push('payment_method = ?'); params.push(payment_method); }
+    if (payment_status) { where.push('payment_status = ?'); params.push(payment_status); }
+    if (date === 'today') {
+      where.push("created_at >= CURRENT_DATE");
+    }
+    if (search) {
+      where.push("(order_number ILIKE ? OR customer_name ILIKE ? OR customer_email ILIKE ? OR customer_phone ILIKE ?)");
+      const q = `%${search}%`;
+      params.push(q, q, q, q);
+    }
+
+    const clause = where.length ? 'WHERE ' + where.join(' AND ') : '';
+    const rows = await db.prepare(`SELECT * FROM orders ${clause} ORDER BY created_at DESC LIMIT ? OFFSET ?`).all(...params, limit, offset);
+    const total = (await db.prepare(`SELECT COUNT(*) as count FROM orders ${clause}`).get(...params)).count;
     res.json({ orders: rows, total });
   } catch (err) {
     res.status(500).json({ error: 'Could not fetch orders' });
+  }
+});
+
+router.get('/orders/export/csv', authenticate, async (_req, res) => {
+  try {
+    const rows = await db.prepare('SELECT * FROM orders ORDER BY created_at DESC').all();
+    const headers = ['Order Number','Date','Customer Name','Email','Phone','Address','City','State','Pincode','Items','Subtotal','Discount','Coupon','Total','Payment Method','Payment Status','Order Status','Razorpay Order ID','Razorpay Payment ID','Invoice','Tracking','Courier'];
+    const csvRows = [headers.join(',')];
+    for (const o of rows) {
+      let itemNames = '';
+      try { const items = JSON.parse(o.items || '[]'); itemNames = items.map(i => `${i.slug} x${i.qty}`).join('; '); } catch {}
+      csvRows.push([
+        o.order_number, o.created_at ? new Date(o.created_at).toISOString().slice(0,10) : '',
+        `"${(o.customer_name||'').replace(/"/g,'""')}"`, o.customer_email, o.customer_phone,
+        `"${(o.shipping_address||'').replace(/"/g,'""')}"`, o.shipping_city, o.shipping_state, o.shipping_pincode,
+        `"${itemNames}"`, (o.subtotal/100).toFixed(2), (o.discount/100).toFixed(2), o.coupon_used,
+        (o.total/100).toFixed(2), o.payment_method, o.payment_status, o.status,
+        o.razorpay_order_id||'', o.razorpay_payment_id||'', o.invoice_number||'',
+        o.tracking_number||'', o.courier||''
+      ].join(','));
+    }
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=tsr-orders-' + new Date().toISOString().slice(0,10) + '.csv');
+    res.send(csvRows.join('\n'));
+  } catch (err) {
+    res.status(500).json({ error: 'Could not export orders' });
   }
 });
 

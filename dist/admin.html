@@ -26,15 +26,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .sidebar .logout{margin-top:auto;border-top:1px solid rgba(255,255,255,.1);padding-top:12px;margin-top:40px}
 .sidebar .logout a{color:var(--gold)}
 .main{margin-left:220px;padding:24px;flex:1;min-width:0}
-.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:8px}
 .topbar h2{font-size:20px;font-weight:600}
+.topbar-actions{display:flex;gap:8px;align-items:center}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
-.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;cursor:pointer;transition:box-shadow .15s}
+.stat:hover{box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.stat.active-filter{border-color:var(--gold);box-shadow:0 0 0 2px rgba(162,125,78,.2)}
 .stat .label{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px}
 .stat .value{font-size:24px;font-weight:700}
 .stat .value.gold{color:var(--gold)}
 table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;font-size:13px}
-th{background:#f5f3ef;text-align:left;padding:10px 14px;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);border-bottom:1px solid var(--border)}
+th{background:#f5f3ef;text-align:left;padding:10px 14px;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
 td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top}
 tr:last-child td{border-bottom:none}
 .badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
@@ -44,6 +47,7 @@ tr:last-child td{border-bottom:none}
 .btn-sm{padding:4px 10px;font-size:12px}
 .btn-danger{background:var(--red);color:#fff}
 .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-gold{background:var(--gold);color:#fff}.btn-gold:hover{opacity:.9}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
 .form-group{margin-bottom:12px}
 .form-group label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
@@ -53,15 +57,25 @@ tr:last-child td{border-bottom:none}
 .modal h3{margin-bottom:16px;font-size:16px}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 .empty{text-align:center;padding:40px;color:var(--muted)}
-.search-bar{margin-bottom:16px}
-.search-bar input{width:100%;max-width:360px;padding:8px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;font-family:inherit}
+.search-bar{display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+.search-bar input{flex:1;min-width:200px;max-width:400px;padding:8px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;font-family:inherit}
+.search-bar select{padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:inherit}
+.filter-tabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.filter-tab{padding:6px 14px;border:1px solid var(--border);border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;background:var(--card);color:var(--muted);transition:all .15s}
+.filter-tab:hover{border-color:var(--gold);color:var(--text)}
+.filter-tab.active{background:var(--text);color:#fff;border-color:var(--text)}
 .order-detail{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
 .order-detail h3{margin-bottom:12px;font-size:15px}
-.order-detail .row{display:flex;gap:24px;margin-bottom:4px;font-size:13px}
-.order-detail .row .lbl{color:var(--muted);width:120px;flex-shrink:0}
+.order-detail .row{display:flex;gap:24px;margin-bottom:6px;font-size:13px}
+.order-detail .row .lbl{color:var(--muted);width:140px;flex-shrink:0;font-weight:500}
+.detail-section{margin-bottom:20px}
+.detail-section h4{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--gold);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.item-table{width:100%;font-size:13px;margin-bottom:8px}
+.item-table td{padding:6px 8px;border-bottom:1px solid var(--border)}
+.item-table tr:last-child td{border-bottom:none}
 .toast{position:fixed;bottom:20px;right:20px;background:var(--text);color:#fff;padding:12px 20px;border-radius:var(--radius);font-size:13px;z-index:200;animation:fadeIn .2s}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-@media(max-width:768px){.sidebar{width:100%;height:auto;position:static;display:flex;flex-wrap:wrap;padding:10px}.sidebar h1{width:100%;margin-bottom:8px}.sidebar a{padding:6px 12px;font-size:13px}.main{margin-left:0}.stats{grid-template-columns:1fr 1fr}.form-row{grid-template-columns:1fr}}
+@media(max-width:768px){.sidebar{width:100%;height:auto;position:static;display:flex;flex-wrap:wrap;padding:10px}.sidebar h1{width:100%;margin-bottom:8px}.sidebar a{padding:6px 12px;font-size:13px}.main{margin-left:0}.stats{grid-template-columns:1fr 1fr}.form-row{grid-template-columns:1fr}.topbar{flex-direction:column;align-items:flex-start}}
 </style>
 </head>
 <body>
@@ -70,6 +84,7 @@ tr:last-child td{border-bottom:none}
 const API='/api';
 let token=localStorage.getItem('tsr-admin-token')||'';
 let currentPage='dashboard';
+let orderFilter='all';
 
 function $(sel,ctx){return(ctx||document).querySelector(sel)}
 function $$(sel,ctx){return[...(ctx||document).querySelectorAll(sel)]}
@@ -79,6 +94,7 @@ async function api(path,opts={}){
   if(token)headers.Authorization='Bearer '+token;
   const r=await fetch(API+path,{...opts,headers});
   if(r.status===401){token='';localStorage.removeItem('tsr-admin-token');render();throw new Error('Unauthorized')}
+  if(opts.raw)return r;
   const data=await r.json();
   if(!r.ok)throw new Error(data.error||'Request failed');
   return data;
@@ -138,11 +154,6 @@ async function loadPage(page){
   }catch(e){el.innerHTML='<p style="color:var(--red)">'+e.message+'</p>'}
 }
 
-async function dashboardPage(el){
-  const d=await api('/admin/dashboard');
-  el.innerHTML=`<div class="topbar"><h2>Dashboard</h2></div><div class="stats"><div class="stat"><div class="label">Total Orders</div><div class="value">${d.orders||0}</div></div><div class="stat"><div class="label">Revenue</div><div class="value gold">${money(d.revenue||0)}</div></div><div class="stat"><div class="label">Pending Orders</div><div class="value">${d.pending_orders||0}</div></div><div class="stat"><div class="label">Products</div><div class="value">${d.products||0}</div></div><div class="stat"><div class="label">Leads</div><div class="value">${d.leads||0}</div></div><div class="stat"><div class="label">Reviews</div><div class="value">${d.reviews||0}</div></div></div><h3 style="margin-bottom:12px">Recent Orders</h3>${d.recent_orders&&d.recent_orders.length?'<table><thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr></thead><tbody>'+d.recent_orders.map(o=>'<tr><td><strong>'+o.order_number+'</strong></td><td>'+esc(o.customer_name)+'</td><td>'+money(o.total)+'</td><td>'+statusBadge(o.status)+'</td><td>'+fmtDate(o.created_at)+'</td></tr>').join('')+'</tbody></table>':'<p class="empty">No orders yet</p>'}`;
-}
-
 function statusBadge(s){
   const map={confirmed:'green',paid:'green',shipped:'blue',delivered:'green',pending:'yellow',failed:'red',cancelled:'red',refunded:'grey'};
   return'<span class="badge '+(map[s]||'grey')+'">'+s+'</span>';
@@ -151,38 +162,166 @@ function payBadge(s){
   return'<span class="badge '+(s==='paid'?'green':s==='unpaid'?'yellow':'red')+'">'+s+'</span>';
 }
 function fmtDate(iso){if(!iso)return'—';const d=new Date(iso);return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}
+function fmtDateTime(iso){if(!iso)return'—';const d=new Date(iso);return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
+async function dashboardPage(el){
+  const d=await api('/admin/dashboard');
+  el.innerHTML=`<div class="topbar"><h2>Dashboard</h2></div>
+  <div class="stats">
+    <div class="stat" data-goto="all"><div class="label">Total Orders</div><div class="value">${d.orders||0}</div></div>
+    <div class="stat" data-goto="pending"><div class="label">Pending</div><div class="value">${d.pending_orders||0}</div></div>
+    <div class="stat"><div class="label">Revenue</div><div class="value gold">${money(d.revenue||0)}</div></div>
+    <div class="stat"><div class="label">Products</div><div class="value">${d.products||0}</div></div>
+    <div class="stat"><div class="label">Leads</div><div class="value">${d.leads||0}</div></div>
+    <div class="stat"><div class="label">Reviews</div><div class="value">${d.reviews||0}</div></div>
+  </div>
+  <h3 style="margin-bottom:12px">Recent Orders</h3>
+  ${d.recent_orders&&d.recent_orders.length?'<table><thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr></thead><tbody>'+d.recent_orders.map(o=>'<tr style="cursor:pointer" data-goto-order="'+o.id+'"><td><strong>'+o.order_number+'</strong></td><td>'+esc(o.customer_name)+'</td><td>'+money(o.total)+'</td><td>'+statusBadge(o.status)+'</td><td>'+fmtDate(o.created_at)+'</td></tr>').join('')+'</tbody></table>':'<p class="empty">No orders yet. Orders will appear here when customers place them.</p>'}`;
+  $$('[data-goto]',el).forEach(s=>{s.onclick=()=>{orderFilter=s.dataset.goto;currentPage='orders';render()}});
+  $$('[data-goto-order]',el).forEach(r=>{r.onclick=()=>{currentPage='orders';render();setTimeout(()=>viewOrder(r.dataset.gotoOrder),200)}});
+}
+
+let allOrders=[];
+let productMap={};
+
 async function ordersPage(el){
-  const d=await api('/admin/orders?limit=100');
-  const orders=d.orders||[];
-  el.innerHTML=`<div class="topbar"><h2>Orders (${d.total||0})</h2></div><div class="search-bar"><input id="order-search" placeholder="Search by order number or customer..."/></div><div id="orders-table"></div><div id="order-detail-view" style="display:none"></div>`;
-  renderOrdersTable(orders);
+  const params=new URLSearchParams();
+  params.set('limit','200');
+  if(orderFilter==='today')params.set('date','today');
+  else if(orderFilter==='pending')params.set('status','pending');
+  else if(orderFilter==='paid')params.set('payment_status','paid');
+  else if(orderFilter==='cod')params.set('payment_method','cod');
+  else if(orderFilter==='failed'){params.set('status','failed');}
+
+  const d=await api('/admin/orders?'+params);
+  allOrders=d.orders||[];
+
+  try{const prods=await api('/admin/products');productMap={};prods.forEach(p=>{productMap[p.slug]=p.name})}catch{}
+
+  el.innerHTML=`<div class="topbar"><h2>Orders</h2>
+    <div class="topbar-actions">
+      <button class="btn btn-outline btn-sm" id="export-csv">Export CSV</button>
+      <button class="btn btn-outline btn-sm" id="refresh-orders">Refresh</button>
+    </div>
+  </div>
+  <div class="filter-tabs">
+    <span class="filter-tab${orderFilter==='all'?' active':''}" data-filter="all">All (${d.total||0})</span>
+    <span class="filter-tab${orderFilter==='today'?' active':''}" data-filter="today">Today</span>
+    <span class="filter-tab${orderFilter==='pending'?' active':''}" data-filter="pending">Pending</span>
+    <span class="filter-tab${orderFilter==='paid'?' active':''}" data-filter="paid">Paid</span>
+    <span class="filter-tab${orderFilter==='cod'?' active':''}" data-filter="cod">COD</span>
+    <span class="filter-tab${orderFilter==='failed'?' active':''}" data-filter="failed">Failed</span>
+  </div>
+  <div class="search-bar"><input id="order-search" placeholder="Search by order number, name, email, or phone..."/></div>
+  <div id="orders-table"></div>
+  <div id="order-detail-view" style="display:none"></div>`;
+
+  renderOrdersTable(allOrders);
+
+  $$('.filter-tab',el).forEach(t=>{t.onclick=()=>{orderFilter=t.dataset.filter;loadPage('orders')}});
   $('#order-search').oninput=function(){
     const q=this.value.toLowerCase();
-    const filtered=orders.filter(o=>(o.order_number||'').toLowerCase().includes(q)||(o.customer_name||'').toLowerCase().includes(q)||(o.customer_email||'').toLowerCase().includes(q));
+    const filtered=allOrders.filter(o=>(o.order_number||'').toLowerCase().includes(q)||(o.customer_name||'').toLowerCase().includes(q)||(o.customer_email||'').toLowerCase().includes(q)||(o.customer_phone||'').includes(q));
     renderOrdersTable(filtered);
   };
+  $('#export-csv').onclick=async()=>{
+    try{
+      const r=await api('/admin/orders/export/csv',{raw:true});
+      const blob=await r.blob();
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');a.href=url;a.download='tsr-orders.csv';a.click();
+      URL.revokeObjectURL(url);toast('CSV exported');
+    }catch(e){toast('Export failed: '+e.message)}
+  };
+  $('#refresh-orders').onclick=()=>loadPage('orders');
+}
+
+function resolveItems(itemsJson){
+  try{
+    const items=JSON.parse(itemsJson||'[]');
+    return items.map(i=>({...i,name:productMap[i.slug]||i.slug}));
+  }catch{return[]}
 }
 
 function renderOrdersTable(orders){
   const el=$('#orders-table');if(!el)return;
-  if(!orders.length){el.innerHTML='<p class="empty">No orders found</p>';return}
-  el.innerHTML='<table><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th><th></th></tr></thead><tbody>'+orders.map(o=>{
-    let items=[];try{items=JSON.parse(o.items||'[]')}catch{}
-    return'<tr><td><strong>'+o.order_number+'</strong></td><td>'+esc(o.customer_name)+'<br><small style="color:var(--muted)">'+esc(o.customer_email)+'</small></td><td>'+items.map(i=>i.slug+' ×'+i.qty).join(', ')+'</td><td>'+money(o.total)+'</td><td>'+(o.payment_method==='cod'?'<span class="badge yellow">COD</span>':'<span class="badge blue">Prepaid</span>')+' '+payBadge(o.payment_status)+'</td><td>'+statusBadge(o.status)+'</td><td>'+fmtDate(o.created_at)+'</td><td><button class="btn btn-sm btn-outline" data-view-order="'+o.id+'">View</button></td></tr>'
-  }).join('')+'</tbody></table>';
+  if(!orders.length){el.innerHTML='<p class="empty">No orders found'+(orderFilter!=='all'?' for this filter. Try "All" to see all orders.':'.')+' Orders appear here automatically when customers complete checkout.</p>';return}
+  el.innerHTML=`<table><thead><tr><th>Order</th><th>Customer</th><th>Phone</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th><th></th></tr></thead><tbody>${orders.map(o=>{
+    const items=resolveItems(o.items);
+    const itemStr=items.map(i=>esc(i.name)+' &times;'+i.qty).join('<br>');
+    return'<tr><td><strong>'+o.order_number+'</strong></td><td>'+esc(o.customer_name)+'<br><small style="color:var(--muted)">'+esc(o.customer_email)+'</small></td><td style="white-space:nowrap">'+esc(o.customer_phone)+'</td><td>'+itemStr+'</td><td><strong>'+money(o.total)+'</strong>'+(o.discount>0?'<br><small style="color:var(--gold)">-'+money(o.discount)+'</small>':'')+'</td><td>'+(o.payment_method==='cod'?'<span class="badge yellow">COD</span>':'<span class="badge blue">Prepaid</span>')+'<br>'+payBadge(o.payment_status)+'</td><td>'+statusBadge(o.status)+'</td><td style="white-space:nowrap">'+fmtDate(o.created_at)+'</td><td><button class="btn btn-sm btn-primary" data-view-order="'+o.id+'">View</button></td></tr>'
+  }).join('')}</tbody></table>`;
   $$('[data-view-order]',el).forEach(btn=>{btn.onclick=()=>viewOrder(btn.dataset.viewOrder)});
 }
 
 async function viewOrder(id){
   const o=await api('/admin/orders/'+id);
-  let items=[];try{items=JSON.parse(o.items||'[]')}catch{}
+  const items=resolveItems(o.items);
   const dv=$('#order-detail-view');const tbl=$('#orders-table');
-  if(tbl)tbl.style.display='none';if($('.search-bar'))$('.search-bar').style.display='none';
+  if(tbl)tbl.style.display='none';if($('.search-bar'))$('.search-bar').style.display='none';if($('.filter-tabs'))$('.filter-tabs').style.display='none';
   dv.style.display='block';
-  dv.innerHTML=`<button class="btn btn-outline" id="back-orders" style="margin-bottom:16px">&larr; Back to Orders</button><div class="order-detail"><h3>Order ${o.order_number}</h3><div class="row"><span class="lbl">Status</span><span>${statusBadge(o.status)}</span></div><div class="row"><span class="lbl">Payment</span><span>${o.payment_method==='cod'?'COD':'Prepaid'} — ${payBadge(o.payment_status)}</span></div><div class="row"><span class="lbl">Total</span><span>${money(o.total)}</span></div>${o.discount>0?'<div class="row"><span class="lbl">Discount</span><span>-'+money(o.discount)+(o.coupon_used?' ('+o.coupon_used+')':'')+'</span></div>':''}<div class="row"><span class="lbl">Customer</span><span>${esc(o.customer_name)}</span></div><div class="row"><span class="lbl">Email</span><span>${esc(o.customer_email)}</span></div><div class="row"><span class="lbl">Phone</span><span>${esc(o.customer_phone)}</span></div><div class="row"><span class="lbl">Address</span><span>${esc(o.shipping_address)}, ${esc(o.shipping_city)}, ${esc(o.shipping_state)} — ${esc(o.shipping_pincode)}</span></div>${o.razorpay_payment_id?'<div class="row"><span class="lbl">Razorpay ID</span><span>'+o.razorpay_payment_id+'</span></div>':''}<div class="row"><span class="lbl">Items</span><span>${items.map(i=>i.slug+' × '+i.qty).join(', ')}</span></div>${o.invoice_number?'<div class="row"><span class="lbl">Invoice</span><span>'+o.invoice_number+'</span></div>':''}<div class="row"><span class="lbl">Tracking</span><span>${o.tracking_number||'Not set'}</span></div><div class="row"><span class="lbl">Date</span><span>${fmtDate(o.created_at)}</span></div></div><div style="display:flex;gap:12px;flex-wrap:wrap"><div class="form-group"><label>Update Status</label><select id="status-sel">${['pending','confirmed','paid','shipped','delivered','cancelled','refunded'].map(s=>'<option'+(s===o.status?' selected':'')+'>'+s+'</option>').join('')}</select></div><button class="btn btn-primary btn-sm" id="save-status">Save Status</button><div class="form-group"><label>Tracking #</label><input id="track-num" value="${esc(o.tracking_number||'')}"/></div><div class="form-group"><label>Courier</label><input id="track-courier" value="${esc(o.courier||'')}"/></div><button class="btn btn-primary btn-sm" id="save-track">Save Tracking</button></div>`;
-  $('#back-orders').onclick=()=>{dv.style.display='none';if(tbl)tbl.style.display='';if($('.search-bar'))$('.search-bar').style.display=''};
+
+  const itemRows=items.map(i=>'<tr><td>'+esc(i.name)+'</td><td style="text-align:center">'+i.qty+'</td><td style="text-align:right">'+money((i.price||0)*i.qty)+'</td></tr>').join('');
+
+  dv.innerHTML=`<button class="btn btn-outline" id="back-orders" style="margin-bottom:16px">&larr; Back to Orders</button>
+
+  <div class="order-detail">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <h3 style="margin:0">Order ${esc(o.order_number)}</h3>
+      <span style="color:var(--muted);font-size:12px">${fmtDateTime(o.created_at)}</span>
+    </div>
+
+    <div class="detail-section">
+      <h4>Order Status</h4>
+      <div class="row"><span class="lbl">Status</span><span>${statusBadge(o.status)}</span></div>
+      <div class="row"><span class="lbl">Payment Method</span><span>${o.payment_method==='cod'?'<span class="badge yellow">Cash on Delivery</span>':'<span class="badge blue">Prepaid (Online)</span>'}</span></div>
+      <div class="row"><span class="lbl">Payment Status</span><span>${payBadge(o.payment_status)}</span></div>
+    </div>
+
+    <div class="detail-section">
+      <h4>Customer Details</h4>
+      <div class="row"><span class="lbl">Name</span><span>${esc(o.customer_name)}</span></div>
+      <div class="row"><span class="lbl">Email</span><span>${esc(o.customer_email)}</span></div>
+      <div class="row"><span class="lbl">Mobile Number</span><span><strong>${esc(o.customer_phone)}</strong></span></div>
+      <div class="row"><span class="lbl">Delivery Address</span><span>${esc(o.shipping_address)}<br>${esc(o.shipping_city)}, ${esc(o.shipping_state)} — ${esc(o.shipping_pincode)}</span></div>
+    </div>
+
+    <div class="detail-section">
+      <h4>Ordered Products</h4>
+      <table class="item-table"><thead><tr><th style="text-align:left">Product</th><th style="text-align:center">Qty</th><th style="text-align:right">Amount</th></tr></thead><tbody>${itemRows}</tbody></table>
+      <div style="text-align:right;padding:8px;border-top:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;padding:2px 0"><span style="color:var(--muted)">Subtotal</span><span>${money(o.subtotal)}</span></div>
+        ${o.discount>0?'<div style="display:flex;justify-content:space-between;padding:2px 0"><span style="color:var(--gold)">Discount'+(o.coupon_used?' ('+esc(o.coupon_used)+')':'')+'</span><span style="color:var(--gold)">-'+money(o.discount)+'</span></div>':''}
+        <div style="display:flex;justify-content:space-between;padding:2px 0"><span style="color:var(--muted)">Shipping</span><span>Complimentary</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;font-weight:700;font-size:15px;border-top:2px solid var(--text)"><span>Total</span><span>${money(o.total)}</span></div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <h4>Payment & Tracking</h4>
+      ${o.razorpay_order_id?'<div class="row"><span class="lbl">Razorpay Order ID</span><span style="font-family:monospace;font-size:12px">'+esc(o.razorpay_order_id)+'</span></div>':''}
+      ${o.razorpay_payment_id?'<div class="row"><span class="lbl">Razorpay Payment ID</span><span style="font-family:monospace;font-size:12px">'+esc(o.razorpay_payment_id)+'</span></div>':''}
+      ${o.invoice_number?'<div class="row"><span class="lbl">Invoice Number</span><span>'+esc(o.invoice_number)+'</span></div>':''}
+      <div class="row"><span class="lbl">Tracking Number</span><span>${o.tracking_number||'<span style="color:var(--muted)">Not set</span>'}</span></div>
+      <div class="row"><span class="lbl">Courier</span><span>${o.courier||'<span style="color:var(--muted)">Not set</span>'}</span></div>
+    </div>
+  </div>
+
+  <div class="order-detail">
+    <h4 style="margin-bottom:12px">Update Order</h4>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+      <div class="form-group" style="margin:0"><label>Order Status</label><select id="status-sel">${['pending','confirmed','paid','shipped','delivered','cancelled','refunded'].map(s=>'<option'+(s===o.status?' selected':'')+'>'+s+'</option>').join('')}</select></div>
+      <button class="btn btn-primary btn-sm" id="save-status">Update Status</button>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-top:12px">
+      <div class="form-group" style="margin:0"><label>Tracking Number</label><input id="track-num" value="${esc(o.tracking_number||'')}" placeholder="e.g. AW12345678"/></div>
+      <div class="form-group" style="margin:0"><label>Courier</label><input id="track-courier" value="${esc(o.courier||'')}" placeholder="e.g. Delhivery"/></div>
+      <button class="btn btn-primary btn-sm" id="save-track">Update Tracking</button>
+    </div>
+  </div>`;
+
+  $('#back-orders').onclick=()=>{dv.style.display='none';if(tbl)tbl.style.display='';if($('.search-bar'))$('.search-bar').style.display='';if($('.filter-tabs'))$('.filter-tabs').style.display=''};
   $('#save-status').onclick=async()=>{
     try{await api('/admin/orders/'+id+'/status',{method:'PUT',body:JSON.stringify({status:$('#status-sel').value})});toast('Status updated');viewOrder(id)}catch(e){toast(e.message)}
   };
@@ -241,7 +380,7 @@ function couponModal(existing){
 }
 
 async function settingsPage(el){
-  el.innerHTML=`<div class="topbar"><h2>Settings</h2></div><div class="order-detail"><h3>Business Information</h3><div class="row"><span class="lbl">Business Email</span><span>orders.thesixthritu@gmail.com</span></div><div class="row"><span class="lbl">GSTIN</span><span>24AJWPG1884D1Z2</span></div><div class="row"><span class="lbl">Website</span><span>https://tsr-zsaf.vercel.app</span></div></div><div class="order-detail"><h3>Environment Status</h3><p style="color:var(--muted);font-size:13px;margin-bottom:12px">These show whether key services are configured. Set values in Vercel Dashboard → Settings → Environment Variables.</p><div id="env-checks"><p>Checking...</p></div></div>`;
+  el.innerHTML=`<div class="topbar"><h2>Settings</h2></div><div class="order-detail"><h3>Business Information</h3><div class="row"><span class="lbl">Business Email</span><span>orders.thesixthritu@gmail.com</span></div><div class="row"><span class="lbl">GSTIN</span><span>24AJWPG1884D1Z2</span></div><div class="row"><span class="lbl">Website</span><span>https://tsr-zsaf.vercel.app</span></div></div><div class="order-detail"><h3>Environment Status</h3><p style="color:var(--muted);font-size:13px;margin-bottom:12px">These show whether key services are configured. Set values in Vercel Dashboard &rarr; Settings &rarr; Environment Variables.</p><div id="env-checks"><p>Checking...</p></div></div>`;
   try{
     const h=await api('/health');
     let checks='<table><thead><tr><th>Service</th><th>Status</th></tr></thead><tbody>';

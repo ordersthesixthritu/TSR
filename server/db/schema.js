@@ -292,7 +292,33 @@ async function runMigrations() {
   } catch (err) {
     console.error('Migration error:', err.message);
   }
+  await ensureAdmin();
   await seedCoupons();
+}
+
+async function ensureAdmin() {
+  const email = process.env.ADMIN_EMAIL;
+  const password = process.env.ADMIN_PASSWORD;
+  if (!email || !password) return;
+
+  const existing = await db.prepare('SELECT id FROM admins WHERE email = ?').get(email);
+  if (existing) return;
+
+  const admins = await db.prepare('SELECT id, email FROM admins').all();
+  if (admins.length === 1 && admins[0].email === 'admin@thesixthritu.com') {
+    const hash = bcrypt.hashSync(password, 12);
+    await db.prepare('UPDATE admins SET email = ?, password_hash = ?, role = ? WHERE id = ?')
+      .run(email, hash, 'super_admin', admins[0].id);
+    console.log(`Updated default admin to ${email}`);
+    return;
+  }
+
+  if (admins.length === 0) {
+    const hash = bcrypt.hashSync(password, 12);
+    await db.prepare('INSERT INTO admins (email, password_hash, name, role) VALUES (?, ?, ?, ?)')
+      .run(email, hash, 'Admin', 'super_admin');
+    console.log(`Seeded admin: ${email}`);
+  }
 }
 
 async function seedCoupons() {
