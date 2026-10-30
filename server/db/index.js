@@ -4,10 +4,11 @@ let _sql;
 
 function getSql() {
   if (!_sql) {
-    if (!process.env.DATABASE_URL) {
+    const dbUrl = process.env.DATABASE_URL || process.env.DATABASE_URL_POOLED;
+    if (!dbUrl) {
       throw new Error('DATABASE_URL is required. Create a free Neon database at https://neon.tech');
     }
-    _sql = neon(process.env.DATABASE_URL);
+    _sql = neon(dbUrl);
   }
   return _sql;
 }

@@ -1,7 +1,9 @@
 node_modules/
-.env.local
 .env
+.env.*
 server/.env
+server/.env.*
+!server/.env.example
 server/data/
 *.db
 *.json.key
