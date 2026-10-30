@@ -26,48 +26,85 @@ export function initEmail() {
     .catch(err => console.error('Email: SMTP verification failed —', err.message));
 }
 
-export function queueEmail({ type, recipient, subject, html, body = '', attachmentPath = '', orderId = null }) {
-  db.prepare(
-    `INSERT INTO email_queue (type, recipient, subject, body, html, attachment_path, order_id)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`
-  ).run(type, recipient, subject, body, html, attachmentPath || '', orderId);
+async function sendSingleEmail(email, attachmentBuffer, attachmentName) {
+  if (!transporter) return false;
+
+  const mailOpts = {
+    from: `"The Sixth Ritu" <${process.env.SMTP_USER}>`,
+    to: email.recipient,
+    subject: email.subject,
+    html: email.html || undefined,
+    text: email.body || undefined,
+  };
+
+  if (attachmentBuffer && attachmentName) {
+    mailOpts.attachments = [{
+      filename: attachmentName,
+      content: attachmentBuffer,
+      contentType: 'application/pdf',
+    }];
+  }
+
+  await transporter.sendMail(mailOpts);
+  return true;
+}
+
+async function queueAndSend({ type, recipient, subject, html, body = '', orderId = null, attachmentBuffer = null, attachmentName = null }) {
+  const result = await db.prepare(
+    `INSERT INTO email_queue (type, recipient, subject, body, html, order_id)
+     VALUES (?, ?, ?, ?, ?, ?)`
+  ).run(type, recipient, subject, body, html, orderId);
+
+  const emailId = result.lastInsertRowid;
+
+  try {
+    const sent = await sendSingleEmail({ recipient, subject, html, body }, attachmentBuffer, attachmentName);
+    if (sent) {
+      await db.prepare(
+        "UPDATE email_queue SET status = 'sent', sent_at = NOW(), attempts = 1 WHERE id = ?"
+      ).run(emailId);
+    }
+  } catch (err) {
+    await db.prepare(
+      "UPDATE email_queue SET attempts = 1, last_error = ? WHERE id = ?"
+    ).run(err.message, emailId);
+  }
 }
 
 export async function processEmailQueue() {
   if (!transporter) return;
 
-  const pending = db.prepare(
-    "SELECT * FROM email_queue WHERE status = 'pending' AND attempts < max_attempts ORDER BY created_at ASC LIMIT 5"
+  const pending = await db.prepare(
+    "SELECT * FROM email_queue WHERE status = 'pending' AND attempts < max_attempts ORDER BY created_at ASC LIMIT 10"
   ).all();
 
   for (const email of pending) {
     try {
-      const mailOpts = {
-        from: `"The Sixth Ritu" <${process.env.SMTP_USER}>`,
-        to: email.recipient,
-        subject: email.subject,
-        html: email.html || undefined,
-        text: email.body || undefined,
-      };
+      let attachmentBuffer = null;
+      let attachmentName = null;
 
-      if (email.attachment_path) {
-        mailOpts.attachments = [{ path: email.attachment_path }];
+      if (email.type === 'invoice' && email.order_id) {
+        const inv = await db.prepare('SELECT pdf_data, order_number FROM invoices WHERE order_id = ?').get(email.order_id);
+        if (inv?.pdf_data) {
+          attachmentBuffer = Buffer.from(inv.pdf_data, 'base64');
+          attachmentName = `Invoice-${inv.order_number}.pdf`;
+        }
       }
 
-      await transporter.sendMail(mailOpts);
+      await sendSingleEmail(email, attachmentBuffer, attachmentName);
 
-      db.prepare(
-        "UPDATE email_queue SET status = 'sent', sent_at = datetime('now'), attempts = attempts + 1 WHERE id = ?"
+      await db.prepare(
+        "UPDATE email_queue SET status = 'sent', sent_at = NOW(), attempts = attempts + 1 WHERE id = ?"
       ).run(email.id);
     } catch (err) {
-      db.prepare(
+      await db.prepare(
         "UPDATE email_queue SET attempts = attempts + 1, last_error = ? WHERE id = ?"
       ).run(err.message, email.id);
 
-      const updated = db.prepare('SELECT attempts, max_attempts FROM email_queue WHERE id = ?').get(email.id);
+      const updated = await db.prepare('SELECT attempts, max_attempts FROM email_queue WHERE id = ?').get(email.id);
       if (updated && updated.attempts >= updated.max_attempts) {
-        db.prepare("UPDATE email_queue SET status = 'failed' WHERE id = ?").run(email.id);
-        db.prepare(
+        await db.prepare("UPDATE email_queue SET status = 'failed' WHERE id = ?").run(email.id);
+        await db.prepare(
           "INSERT INTO failed_jobs (job_type, order_id, error, payload) VALUES (?, ?, ?, ?)"
         ).run('email', email.order_id, err.message, JSON.stringify({ type: email.type, recipient: email.recipient }));
       }
@@ -83,18 +120,20 @@ function formatPaise(paise) {
   return '₹' + (paise / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 });
 }
 
-function parseItems(itemsJson) {
+async function parseItems(itemsJson) {
   try {
     const items = JSON.parse(itemsJson);
-    return items.map(i => {
-      const product = db.prepare('SELECT name, price FROM products WHERE slug = ?').get(i.slug);
-      return { ...i, name: product?.name || i.slug, price: product?.price || 0 };
-    });
+    const resolved = [];
+    for (const i of items) {
+      const product = await db.prepare('SELECT name, price FROM products WHERE slug = ?').get(i.slug);
+      resolved.push({ ...i, name: product?.name || i.slug, price: product?.price || 0 });
+    }
+    return resolved;
   } catch { return []; }
 }
 
-export function queueOrderConfirmation(order) {
-  const items = parseItems(order.items);
+export async function queueOrderConfirmation(order) {
+  const items = await parseItems(order.items);
   const itemRows = items.map(i =>
     `<tr>
       <td style="padding:10px 16px;border-bottom:1px solid #e8e4dd;">${i.name}</td>
@@ -153,7 +192,7 @@ export function queueOrderConfirmation(order) {
     </div>
   </div>`;
 
-  queueEmail({
+  await queueAndSend({
     type: 'order_confirmation',
     recipient: order.customer_email,
     subject: `Order Confirmed — ${order.order_number} | The Sixth Ritu`,
@@ -162,8 +201,8 @@ export function queueOrderConfirmation(order) {
   });
 }
 
-export function queueOwnerNotification(order) {
-  const items = parseItems(order.items);
+export async function queueOwnerNotification(order) {
+  const items = await parseItems(order.items);
   const itemList = items.map(i => `${i.name} × ${i.qty}`).join(', ');
   const businessEmail = process.env.BUSINESS_EMAIL;
   if (!businessEmail) return;
@@ -184,7 +223,7 @@ export function queueOwnerNotification(order) {
     </table>
   </div>`;
 
-  queueEmail({
+  await queueAndSend({
     type: 'owner_notification',
     recipient: businessEmail,
     subject: `[TSR] New Order ${order.order_number} — ${formatPaise(order.total)} (${paymentLabel})`,
@@ -193,7 +232,7 @@ export function queueOwnerNotification(order) {
   });
 }
 
-export function queueInvoiceEmail(order, invoicePath) {
+export async function queueInvoiceEmail(order, pdfBuffer) {
   if (!order.customer_email) return;
 
   const html = `
@@ -208,12 +247,13 @@ export function queueInvoiceEmail(order, invoicePath) {
     </div>
   </div>`;
 
-  queueEmail({
+  await queueAndSend({
     type: 'invoice',
     recipient: order.customer_email,
     subject: `Invoice — ${order.order_number} | The Sixth Ritu`,
     html,
-    attachmentPath: invoicePath,
     orderId: order.id,
+    attachmentBuffer: pdfBuffer,
+    attachmentName: `Invoice-${order.order_number}.pdf`,
   });
 }

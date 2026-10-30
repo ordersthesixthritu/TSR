@@ -17,8 +17,8 @@
 
 - **Frontend**: Static files served from `dist/` (HTML, CSS, JS, images)
 - **Backend**: Single serverless function (`api/index.js`) that imports the Express app from `server/app.js`
-- **Email Queue**: Vercel Cron Job calls `/api/cron/process-emails` every 5 minutes
-- **Database**: Currently sql.js (in-memory) — **must be migrated to Vercel Postgres or Turso before production**
+- **Email Queue**: Emails sent immediately on order; daily cron retries any failures
+- **Database**: Neon PostgreSQL (free tier — serverless, persistent)
 
 ---
 
@@ -48,6 +48,11 @@ Go to **Project Settings → Environment Variables** and add each of these:
 | `RAZORPAY_KEY_ID` | `rzp_live_XXXXX` | From Razorpay Dashboard → Settings → API Keys |
 | `RAZORPAY_KEY_SECRET` | `XXXXX` | Same page — **never expose in frontend** |
 | `RAZORPAY_WEBHOOK_SECRET` | `XXXXX` | Razorpay Dashboard → Webhooks → Secret |
+
+### Required for Database (Neon PostgreSQL)
+| Variable | Value | Notes |
+|---|---|---|
+| `DATABASE_URL` | `postgresql://user:pass@ep-xxx.region.aws.neon.tech/dbname?sslmode=require` | From Neon Dashboard → Connection Details → Connection String |
 
 ### Required for Server
 | Variable | Value | Notes |
@@ -165,53 +170,46 @@ After adding all environment variables:
 
 ---
 
-## Database Migration (CRITICAL — Before Production Orders)
+## Database Setup (Neon PostgreSQL — Free Tier)
 
-The current backend uses **sql.js** (in-memory SQLite). This works for local development but **data will be lost on every serverless function cold start** on Vercel.
+The backend uses **Neon PostgreSQL** via the `@neondatabase/serverless` HTTP driver — ideal for Vercel's serverless functions (no persistent connections needed).
 
-### Before accepting real customer orders, you MUST migrate to a persistent database.
+### Create a Free Neon Database
 
-**Recommended: Vercel Postgres (powered by Neon)**
+1. Go to [neon.tech](https://neon.tech) and sign up (free)
+2. Click **"New Project"**
+3. Choose a project name (e.g., `the-sixth-ritu`) and region closest to your users (e.g., `ap-south-1` for India)
+4. After creation, go to **Dashboard → Connection Details**
+5. Copy the **Connection String** (it looks like `postgresql://user:pass@ep-xxx.region.aws.neon.tech/neondb?sslmode=require`)
+6. Add this as `DATABASE_URL` in your Vercel environment variables
 
-1. In Vercel Dashboard → **Storage** → **Create Database** → **Postgres**
-2. Connect it to your project (auto-adds env vars)
-3. The migration from sql.js to Postgres requires:
-   - Replace `server/db/index.js` with a Postgres adapter (using `@vercel/postgres` or `pg`)
-   - Update SQL syntax from SQLite to PostgreSQL (minor differences)
-   - Run schema creation on first deploy
+**The database tables are created automatically on the first request.** No manual migration needed.
 
-**Alternative: Turso (SQLite-compatible, distributed)**
-
-1. Sign up at [turso.tech](https://turso.tech)
-2. Create a database
-3. Replace the sql.js wrapper with `@libsql/client`
-4. Minimal SQL changes needed (SQLite-compatible)
+### Free Tier Limits (more than enough for this project)
+- 0.5 GB storage
+- 190 compute hours/month
+- Autosuspend after 5 minutes of inactivity (wakes on next query)
 
 ### Invoice Storage
 
-Currently invoices are stored as local PDF files. On Vercel's serverless platform, local files are ephemeral.
-
-**Options for production:**
-- **Vercel Blob**: Store PDFs in Vercel's blob storage
-- **Database BLOB**: Store small PDFs directly in the database
-- **Cloud Storage**: AWS S3, Google Cloud Storage, etc.
+Invoices are generated as PDF and stored as base64 text directly in the database (`invoices.pdf_data` column). No external file storage needed. Invoices are served via `/api/payments/invoice/:orderNumber`.
 
 ---
 
-## Cron Jobs
+## Email System
 
-The `vercel.json` configures one cron job:
+Emails are sent **immediately** when an order is placed (order confirmation, owner notification, invoice). If the immediate send fails, the email is saved in the `email_queue` table for retry.
+
+A daily cron job retries any failed emails:
 
 ```json
 {
   "path": "/api/cron/process-emails",
-  "schedule": "*/5 * * * *"
+  "schedule": "0 0 * * *"
 }
 ```
 
-This processes the email queue every 5 minutes. It's authenticated using the `CRON_SECRET` env var. Vercel automatically adds the `Authorization: Bearer <CRON_SECRET>` header to cron requests.
-
-**Note**: Vercel Cron Jobs are available on the Pro plan ($20/month) and above. On the free Hobby plan, you get 1 cron job with a minimum interval of 1 day.
+This runs once per day at midnight UTC — compatible with the Vercel Hobby (free) plan, which allows 1 cron job with a minimum interval of 1 day. The cron is authenticated using the `CRON_SECRET` env var (Vercel adds the header automatically).
 
 ---
 

@@ -1,93 +1,70 @@
-import initSqlJs from 'sql.js';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { neon } from '@neondatabase/serverless';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const dbPath = path.join(__dirname, '..', 'data', 'tsr.db');
-const dataDir = path.dirname(dbPath);
-if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+let _sql;
 
-const SQL = await initSqlJs();
-
-let rawDb;
-if (fs.existsSync(dbPath)) {
-  const buf = fs.readFileSync(dbPath);
-  rawDb = new SQL.Database(buf);
-} else {
-  rawDb = new SQL.Database();
+function getSql() {
+  if (!_sql) {
+    if (!process.env.DATABASE_URL) {
+      throw new Error('DATABASE_URL is required. Create a free Neon database at https://neon.tech');
+    }
+    _sql = neon(process.env.DATABASE_URL);
+  }
+  return _sql;
 }
 
-rawDb.run('PRAGMA foreign_keys = ON');
-
-let inTransaction = false;
-
-function saveToFile() {
-  if (inTransaction) return;
-  const data = rawDb.export();
-  fs.writeFileSync(dbPath, Buffer.from(data));
+function toPostgres(query) {
+  let i = 0;
+  let q = query.replace(/\?/g, () => `$${++i}`);
+  q = q.replace(/datetime\(\s*'now'\s*\)/gi, 'NOW()');
+  return q;
 }
 
 const db = {
-  prepare(sql) {
+  prepare(rawQuery) {
+    const query = toPostgres(rawQuery);
+
     return {
-      run(...params) {
-        rawDb.run(sql, params);
-        saveToFile();
-        const r = rawDb.exec('SELECT last_insert_rowid() as id');
-        const lastId = r.length ? r[0].values[0][0] : 0;
-        const changes = rawDb.getRowsModified();
-        return { lastInsertRowid: lastId, changes };
-      },
-      get(...params) {
-        const stmt = rawDb.prepare(sql);
-        if (params.length) stmt.bind(params);
-        let row;
-        if (stmt.step()) {
-          const cols = stmt.getColumnNames();
-          const vals = stmt.get();
-          row = {};
-          cols.forEach((c, i) => row[c] = vals[i]);
+      async run(...params) {
+        const s = getSql();
+        if (/^\s*INSERT/i.test(query) && !/RETURNING/i.test(query)) {
+          const withRet = query.trimEnd().replace(/;?\s*$/, '') + ' RETURNING id';
+          try {
+            const rows = await s(withRet, params);
+            return { lastInsertRowid: rows[0]?.id ?? 0, changes: 1 };
+          } catch {
+            await s(query, params);
+            return { lastInsertRowid: 0, changes: 1 };
+          }
         }
-        stmt.free();
-        return row;
+        const rows = await s(query, params);
+        return { lastInsertRowid: rows[0]?.id ?? 0, changes: rows.length || 0 };
       },
-      all(...params) {
-        const rows = [];
-        const stmt = rawDb.prepare(sql);
-        if (params.length) stmt.bind(params);
-        while (stmt.step()) {
-          const cols = stmt.getColumnNames();
-          const vals = stmt.get();
-          const row = {};
-          cols.forEach((c, i) => row[c] = vals[i]);
-          rows.push(row);
-        }
-        stmt.free();
-        return rows;
+
+      async get(...params) {
+        const rows = await getSql()(query, params);
+        return rows[0] || undefined;
+      },
+
+      async all(...params) {
+        return await getSql()(query, params);
       },
     };
   },
-  exec(sql) {
-    rawDb.run(sql);
-    saveToFile();
+
+  async exec(rawQuery) {
+    const query = toPostgres(rawQuery);
+    const stmts = query
+      .split(/;\s*(?=\n|$)/)
+      .map(s => s.trim())
+      .filter(s => s.length > 0 && !/^\s*--/.test(s));
+    const s = getSql();
+    for (const stmt of stmts) {
+      await s(stmt);
+    }
   },
+
   transaction(fn) {
-    return (...args) => {
-      inTransaction = true;
-      rawDb.run('BEGIN');
-      try {
-        const result = fn(...args);
-        rawDb.run('COMMIT');
-        inTransaction = false;
-        saveToFile();
-        return result;
-      } catch (err) {
-        rawDb.run('ROLLBACK');
-        inTransaction = false;
-        throw err;
-      }
-    };
+    return async (...args) => await fn(...args);
   },
 };
 

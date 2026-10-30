@@ -20,7 +20,7 @@ export function generateToken(admin) {
   );
 }
 
-export function authenticate(req, res, next) {
+export async function authenticate(req, res, next) {
   const header = req.headers.authorization;
   if (!header?.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Authentication required' });
@@ -28,7 +28,7 @@ export function authenticate(req, res, next) {
 
   try {
     const payload = jwt.verify(header.slice(7), SECRET);
-    const admin = db.prepare('SELECT id, email, name, role FROM admins WHERE id = ?').get(payload.id);
+    const admin = await db.prepare('SELECT id, email, name, role FROM admins WHERE id = ?').get(payload.id);
     if (!admin) return res.status(401).json({ error: 'Account not found' });
     req.admin = admin;
     next();

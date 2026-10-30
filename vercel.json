@@ -4,7 +4,7 @@
   "installCommand": "cd server && npm install",
   "functions": {
     "api/index.js": {
-      "maxDuration": 30,
+      "maxDuration": 10,
       "includeFiles": "server/**"
     }
   },
@@ -29,7 +29,7 @@
   "crons": [
     {
       "path": "/api/cron/process-emails",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }

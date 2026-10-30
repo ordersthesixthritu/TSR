@@ -17,11 +17,27 @@ import { initSheets, ensureSheetHeaders } from './services/sheets.js';
 
 const app = express();
 
-initDatabase();
-initEmail();
-initSheets();
+let _initPromise = null;
+export async function ensureInit() {
+  if (!_initPromise) {
+    _initPromise = (async () => {
+      await initDatabase();
+      initEmail();
+      initSheets();
+      ensureSheetHeaders().catch(err => console.error('Sheets header check failed:', err.message));
+    })();
+  }
+  return _initPromise;
+}
 
-ensureSheetHeaders().catch(err => console.error('Sheets header check failed:', err.message));
+app.use(async (_req, _res, next) => {
+  try {
+    await ensureInit();
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
 
 app.use(helmet({ contentSecurityPolicy: false }));
 

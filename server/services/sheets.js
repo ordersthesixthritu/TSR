@@ -5,17 +5,18 @@ let sheets = null;
 let spreadsheetId = null;
 
 export function initSheets() {
-  const keyFile = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+  const keyJson = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
   spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
 
-  if (!keyFile || !spreadsheetId) {
+  if (!keyJson || !spreadsheetId) {
     console.log('Sheets: Google Sheets not configured — sync disabled');
     return;
   }
 
   try {
+    const credentials = JSON.parse(keyJson);
     const auth = new google.auth.GoogleAuth({
-      keyFile,
+      credentials,
       scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
 
@@ -32,13 +33,15 @@ function formatDate(iso) {
   return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-function parseItemNames(itemsJson) {
+async function parseItemNames(itemsJson) {
   try {
     const items = JSON.parse(itemsJson);
-    return items.map(i => {
-      const product = db.prepare('SELECT name FROM products WHERE slug = ?').get(i.slug);
-      return `${product?.name || i.slug} × ${i.qty}`;
-    }).join(', ');
+    const names = [];
+    for (const i of items) {
+      const product = await db.prepare('SELECT name FROM products WHERE slug = ?').get(i.slug);
+      names.push(`${product?.name || i.slug} × ${i.qty}`);
+    }
+    return names.join(', ');
   } catch { return ''; }
 }
 
@@ -52,7 +55,7 @@ export async function syncOrderToSheet(order) {
       order.customer_name,
       order.customer_email,
       order.customer_phone,
-      parseItemNames(order.items),
+      await parseItemNames(order.items),
       (order.subtotal / 100).toFixed(2),
       (order.discount / 100).toFixed(2),
       (order.total / 100).toFixed(2),
@@ -72,7 +75,7 @@ export async function syncOrderToSheet(order) {
     });
   } catch (err) {
     console.error('Sheets: Failed to sync order', order.order_number, '—', err.message);
-    db.prepare(
+    await db.prepare(
       "INSERT INTO failed_jobs (job_type, order_id, error, payload) VALUES (?, ?, ?, ?)"
     ).run('sheets_sync', order.id, err.message, JSON.stringify({ order_number: order.order_number }));
   }
