@@ -21,11 +21,17 @@ let _initPromise = null;
 export async function ensureInit() {
   if (!_initPromise) {
     _initPromise = (async () => {
+      const t0 = Date.now();
       await initDatabase();
+      console.log(`Init: database ready (${Date.now() - t0}ms)`);
       initEmail();
       initSheets();
       ensureSheetHeaders().catch(err => console.error('Sheets header check failed:', err.message));
-    })();
+      console.log(`Init: complete (${Date.now() - t0}ms)`);
+    })().catch(err => {
+      _initPromise = null;
+      throw err;
+    });
   }
   return _initPromise;
 }

@@ -8,7 +8,9 @@ function getSql() {
     if (!dbUrl) {
       throw new Error('DATABASE_URL is required. Create a free Neon database at https://neon.tech');
     }
-    _sql = neon(dbUrl);
+    const url = new URL(dbUrl);
+    url.searchParams.delete('channel_binding');
+    _sql = neon(url.toString());
   }
   return _sql;
 }

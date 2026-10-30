@@ -2,6 +2,15 @@ import db from './index.js';
 import bcrypt from 'bcryptjs';
 
 export async function initDatabase() {
+  const existing = await db.prepare(
+    "SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename = 'admins'"
+  ).get();
+  if (existing) {
+    console.log('Database: schema already exists — skipping DDL');
+    return;
+  }
+  console.log('Database: creating schema...');
+
   await db.exec(`
     CREATE TABLE IF NOT EXISTS admins (
       id SERIAL PRIMARY KEY,

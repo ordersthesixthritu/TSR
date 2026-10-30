@@ -1,4 +1,4 @@
-import { google } from 'googleapis';
+import { sheets_v4, auth as gauth } from '@googleapis/sheets';
 import db from '../db/index.js';
 
 let sheets = null;
@@ -15,12 +15,12 @@ export function initSheets() {
 
   try {
     const credentials = JSON.parse(keyJson);
-    const auth = new google.auth.GoogleAuth({
+    const authClient = new gauth.GoogleAuth({
       credentials,
       scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
 
-    sheets = google.sheets({ version: 'v4', auth });
+    sheets = new sheets_v4.Sheets({ auth: authClient });
     console.log('Sheets: Google Sheets sync initialized');
   } catch (err) {
     console.error('Sheets: Failed to initialize —', err.message);
