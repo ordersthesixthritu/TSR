@@ -1,8 +1,12 @@
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import db from '../db/index.js';
 
-const SECRET = process.env.ADMIN_JWT_SECRET || 'fallback-dev-secret';
+if (!process.env.ADMIN_JWT_SECRET) {
+  console.warn('WARNING: ADMIN_JWT_SECRET not set — using random secret (admin sessions will not persist across restarts)');
+}
+const SECRET = process.env.ADMIN_JWT_SECRET || crypto.randomBytes(32).toString('hex');
 
 export function hashPassword(plain) {
   return bcrypt.hashSync(plain, 12);

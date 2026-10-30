@@ -5,6 +5,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import db from '../db/index.js';
 import { authenticate, requireRole, verifyPassword, hashPassword, generateToken } from '../middleware/auth.js';
+import { updateOrderInSheet } from '../services/sheets.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const router = Router();
@@ -178,6 +179,26 @@ router.put('/orders/:id/status', authenticate, requireRole('super_admin', 'admin
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: 'Could not update order status' });
+  }
+});
+
+router.put('/orders/:id/tracking', authenticate, requireRole('super_admin', 'admin'), async (req, res) => {
+  try {
+    const { tracking_number, courier } = req.body;
+    if (!tracking_number) return res.status(400).json({ error: 'Tracking number required' });
+
+    await db.prepare(
+      "UPDATE orders SET tracking_number = ?, courier = ?, updated_at = NOW() WHERE id = ?"
+    ).run(tracking_number, courier || '', req.params.id);
+
+    const order = await db.prepare('SELECT order_number FROM orders WHERE id = ?').get(req.params.id);
+    if (order) {
+      updateOrderInSheet(order.order_number, { tracking_number, courier: courier || '' }).catch(() => {});
+    }
+
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not update tracking' });
   }
 });
 

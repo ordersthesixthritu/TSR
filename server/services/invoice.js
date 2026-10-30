@@ -2,14 +2,13 @@ import PDFDocument from 'pdfkit';
 import db from '../db/index.js';
 
 async function getNextInvoiceNumber() {
-  const counter = await db.prepare('SELECT current_number, prefix, financial_year FROM invoice_counter WHERE id = 1').get();
+  const counter = await db.prepare(
+    'UPDATE invoice_counter SET current_number = current_number + 1 WHERE id = 1 RETURNING current_number, prefix, financial_year'
+  ).get();
   if (!counter) throw new Error('Invoice counter not initialized');
 
-  const next = counter.current_number + 1;
-  await db.prepare('UPDATE invoice_counter SET current_number = ? WHERE id = 1').run(next);
-
   const fy = counter.financial_year.replace('-', '');
-  return `${counter.prefix}/${fy}/${String(next).padStart(4, '0')}`;
+  return `${counter.prefix}/${fy}/${String(counter.current_number).padStart(4, '0')}`;
 }
 
 async function parseItems(itemsJson) {

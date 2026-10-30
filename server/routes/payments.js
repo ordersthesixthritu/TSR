@@ -186,7 +186,9 @@ router.post('/verify', async (req, res) => {
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest('hex');
 
-    if (expected !== razorpay_signature) {
+    const expectedBuf = Buffer.from(expected, 'hex');
+    const signatureBuf = Buffer.from(razorpay_signature, 'hex');
+    if (expectedBuf.length !== signatureBuf.length || !crypto.timingSafeEqual(expectedBuf, signatureBuf)) {
       return res.status(400).json({ error: 'Payment verification failed' });
     }
 
@@ -226,7 +228,9 @@ router.post('/webhook', async (req, res) => {
       .update(rawBody)
       .digest('hex');
 
-    if (expected !== signature) {
+    const expectedBuf = Buffer.from(expected, 'hex');
+    const signatureBuf = Buffer.from(signature, 'hex');
+    if (expectedBuf.length !== signatureBuf.length || !crypto.timingSafeEqual(expectedBuf, signatureBuf)) {
       return res.status(400).json({ error: 'Invalid webhook signature' });
     }
 
@@ -249,10 +253,6 @@ router.post('/webhook', async (req, res) => {
           await db.prepare(
             "UPDATE orders SET status = 'confirmed', payment_status = 'paid', razorpay_payment_id = ?, updated_at = NOW() WHERE razorpay_order_id = ?"
           ).run(paymentId, orderId);
-
-          if (order.coupon_used && order.status === 'pending') {
-            await db.prepare('UPDATE coupons SET current_uses = current_uses + 1 WHERE code = ?').run(order.coupon_used);
-          }
 
           const updated = await db.prepare('SELECT * FROM orders WHERE razorpay_order_id = ?').get(orderId);
           handlePostOrder(updated);
@@ -335,6 +335,17 @@ router.get('/order-status/:orderNumber', async (req, res) => {
 router.get('/invoice/:orderNumber', async (req, res) => {
   try {
     const { orderNumber } = req.params;
+    const { email, phone } = req.query;
+    if (!email && !phone) {
+      return res.status(400).json({ error: 'Email or phone required for verification' });
+    }
+    const order = await db.prepare('SELECT customer_email, customer_phone FROM orders WHERE order_number = ?').get(orderNumber);
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    const emailMatch = email && order.customer_email === email.trim().toLowerCase();
+    const phoneMatch = phone && order.customer_phone === phone.replace(/\s/g, '');
+    if (!emailMatch && !phoneMatch) {
+      return res.status(403).json({ error: 'Verification failed' });
+    }
     const invoice = await db.prepare('SELECT pdf_data, invoice_number FROM invoices WHERE order_number = ?').get(orderNumber);
     if (!invoice || !invoice.pdf_data) {
       return res.status(404).json({ error: 'Invoice not found' });
@@ -349,11 +360,21 @@ router.get('/invoice/:orderNumber', async (req, res) => {
   }
 });
 
+const _postOrderProcessed = new Set();
+
 function handlePostOrder(order) {
   if (!order) return;
+  if (_postOrderProcessed.has(order.order_number)) return;
+  _postOrderProcessed.add(order.order_number);
 
   (async () => {
     try {
+      const existing = await db.prepare('SELECT id FROM invoices WHERE order_number = ?').get(order.order_number);
+      if (existing) {
+        console.log(`post-order: already processed ${order.order_number} — skipping`);
+        return;
+      }
+
       await queueOrderConfirmation(order);
       await queueOwnerNotification(order);
 
@@ -372,6 +393,8 @@ function handlePostOrder(order) {
           "INSERT INTO failed_jobs (job_type, order_id, error, payload) VALUES (?, ?, ?, ?)"
         ).run('post_order', order.id, err.message, JSON.stringify({ order_number: order.order_number }));
       } catch { /* best effort */ }
+    } finally {
+      setTimeout(() => _postOrderProcessed.delete(order.order_number), 60000);
     }
   })();
 }
