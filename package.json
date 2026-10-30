@@ -1,0 +1,12 @@
+{
+  "private": true,
+  "name": "the-sixth-ritu",
+  "version": "1.0.0",
+  "engines": {
+    "node": "18.x"
+  },
+  "scripts": {
+    "postinstall": "cd server && npm install",
+    "build": "echo 'Frontend is pre-built in dist/'"
+  }
+}

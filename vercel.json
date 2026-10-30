@@ -1,7 +1,6 @@
 {
   "version": 2,
   "outputDirectory": "dist",
-  "installCommand": "cd server && npm install",
   "functions": {
     "api/index.js": {
       "maxDuration": 10,
