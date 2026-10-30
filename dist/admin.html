@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>TSR Admin</title>
+<link rel="icon" href="/logo.png"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#faf8f4;--card:#fff;--border:#e8e4dd;--text:#1a1815;--muted:#6b6560;--gold:#a27d4e;--green:#2d7d46;--red:#c0392b;--blue:#2563eb;--radius:6px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.login-box{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:40px;max-width:380px;width:100%;text-align:center}
+.login-box h1{font-size:18px;letter-spacing:2px;color:var(--gold);margin-bottom:8px}
+.login-box p{color:var(--muted);font-size:13px;margin-bottom:24px}
+.login-box input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;margin-bottom:12px;font-family:inherit}
+.login-box button{width:100%;padding:10px;background:var(--text);color:#fff;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer}
+.login-box button:hover{opacity:.9}
+.login-box .err{color:var(--red);font-size:13px;margin-top:8px}
+.shell{display:flex;min-height:100vh}
+.sidebar{width:220px;background:var(--text);color:#fff;padding:20px 0;flex-shrink:0;position:fixed;height:100vh;overflow-y:auto}
+.sidebar h1{font-size:14px;letter-spacing:2px;color:var(--gold);padding:0 20px;margin-bottom:24px}
+.sidebar a{display:block;padding:10px 20px;color:#ccc;text-decoration:none;font-size:14px;transition:background .15s}
+.sidebar a:hover,.sidebar a.active{background:rgba(255,255,255,.08);color:#fff}
+.sidebar .logout{margin-top:auto;border-top:1px solid rgba(255,255,255,.1);padding-top:12px;margin-top:40px}
+.sidebar .logout a{color:var(--gold)}
+.main{margin-left:220px;padding:24px;flex:1;min-width:0}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.topbar h2{font-size:20px;font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.stat .label{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px}
+.stat .value{font-size:24px;font-weight:700}
+.stat .value.gold{color:var(--gold)}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;font-size:13px}
+th{background:#f5f3ef;text-align:left;padding:10px 14px;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);border-bottom:1px solid var(--border)}
+td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:none}
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
+.badge.green{background:#e6f4ea;color:var(--green)}.badge.red{background:#fce8e6;color:var(--red)}.badge.yellow{background:#fef7e0;color:#92650b}.badge.blue{background:#e8f0fe;color:var(--blue)}.badge.grey{background:#f0ece5;color:var(--muted)}
+.btn{padding:8px 16px;border:none;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-primary{background:var(--text);color:#fff}.btn-primary:hover{opacity:.9}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn-danger{background:var(--red);color:#fff}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;font-family:inherit}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:100}
+.modal{background:var(--card);border-radius:8px;padding:24px;max-width:520px;width:90%;max-height:85vh;overflow-y:auto}
+.modal h3{margin-bottom:16px;font-size:16px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.empty{text-align:center;padding:40px;color:var(--muted)}
+.search-bar{margin-bottom:16px}
+.search-bar input{width:100%;max-width:360px;padding:8px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;font-family:inherit}
+.order-detail{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.order-detail h3{margin-bottom:12px;font-size:15px}
+.order-detail .row{display:flex;gap:24px;margin-bottom:4px;font-size:13px}
+.order-detail .row .lbl{color:var(--muted);width:120px;flex-shrink:0}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--text);color:#fff;padding:12px 20px;border-radius:var(--radius);font-size:13px;z-index:200;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:768px){.sidebar{width:100%;height:auto;position:static;display:flex;flex-wrap:wrap;padding:10px}.sidebar h1{width:100%;margin-bottom:8px}.sidebar a{padding:6px 12px;font-size:13px}.main{margin-left:0}.stats{grid-template-columns:1fr 1fr}.form-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const API='/api';
+let token=localStorage.getItem('tsr-admin-token')||'';
+let currentPage='dashboard';
+
+function $(sel,ctx){return(ctx||document).querySelector(sel)}
+function $$(sel,ctx){return[...(ctx||document).querySelectorAll(sel)]}
+
+async function api(path,opts={}){
+  const headers={'Content-Type':'application/json',...(opts.headers||{})};
+  if(token)headers.Authorization='Bearer '+token;
+  const r=await fetch(API+path,{...opts,headers});
+  if(r.status===401){token='';localStorage.removeItem('tsr-admin-token');render();throw new Error('Unauthorized')}
+  const data=await r.json();
+  if(!r.ok)throw new Error(data.error||'Request failed');
+  return data;
+}
+
+function money(paise){return'₹'+(paise/100).toLocaleString('en-IN',{minimumFractionDigits:0})}
+
+function toast(msg){
+  const el=document.createElement('div');el.className='toast';el.textContent=msg;
+  document.body.appendChild(el);setTimeout(()=>el.remove(),3000);
+}
+
+function render(){
+  const root=$('#root');
+  if(!token){root.innerHTML=loginPage();bindLogin();return}
+  root.innerHTML=shell();
+  bindNav();
+  loadPage(currentPage);
+}
+
+function loginPage(){
+  return`<div class="login-wrap"><div class="login-box"><h1>THE SIXTH RITU</h1><p>Admin Dashboard</p><input id="l-email" type="email" placeholder="Email"/><input id="l-pass" type="password" placeholder="Password"/><button id="l-btn">Sign In</button><p class="err" id="l-err"></p></div></div>`;
+}
+
+function bindLogin(){
+  const btn=$('#l-btn');if(!btn)return;
+  btn.onclick=async()=>{
+    const email=$('#l-email').value.trim();const pass=$('#l-pass').value;
+    if(!email||!pass){$('#l-err').textContent='Enter email and password';return}
+    btn.disabled=true;btn.textContent='Signing in...';
+    try{
+      const d=await api('/admin/login',{method:'POST',body:JSON.stringify({email,password:pass})});
+      token=d.token;localStorage.setItem('tsr-admin-token',token);render();
+    }catch(e){$('#l-err').textContent=e.message;btn.disabled=false;btn.textContent='Sign In'}
+  };
+  $('#l-pass').onkeydown=e=>{if(e.key==='Enter')btn.click()};
+}
+
+function shell(){
+  return`<div class="shell"><nav class="sidebar"><h1>THE SIXTH RITU</h1><a href="#" data-page="dashboard" class="${currentPage==='dashboard'?'active':''}">Dashboard</a><a href="#" data-page="orders" class="${currentPage==='orders'?'active':''}">Orders</a><a href="#" data-page="products" class="${currentPage==='products'?'active':''}">Products</a><a href="#" data-page="coupons" class="${currentPage==='coupons'?'active':''}">Coupons</a><a href="#" data-page="settings" class="${currentPage==='settings'?'active':''}">Settings</a><div class="logout"><a href="#" id="logout-btn">Sign Out</a></div></nav><div class="main"><div id="page-content"></div></div></div>`;
+}
+
+function bindNav(){
+  $$('[data-page]').forEach(a=>{a.onclick=e=>{e.preventDefault();currentPage=a.dataset.page;render()}});
+  const lb=$('#logout-btn');if(lb)lb.onclick=e=>{e.preventDefault();token='';localStorage.removeItem('tsr-admin-token');render()};
+}
+
+async function loadPage(page){
+  const el=$('#page-content');if(!el)return;
+  el.innerHTML='<p style="color:var(--muted)">Loading...</p>';
+  try{
+    if(page==='dashboard')await dashboardPage(el);
+    else if(page==='orders')await ordersPage(el);
+    else if(page==='products')await productsPage(el);
+    else if(page==='coupons')await couponsPage(el);
+    else if(page==='settings')await settingsPage(el);
+  }catch(e){el.innerHTML='<p style="color:var(--red)">'+e.message+'</p>'}
+}
+
+async function dashboardPage(el){
+  const d=await api('/admin/dashboard');
+  el.innerHTML=`<div class="topbar"><h2>Dashboard</h2></div><div class="stats"><div class="stat"><div class="label">Total Orders</div><div class="value">${d.orders||0}</div></div><div class="stat"><div class="label">Revenue</div><div class="value gold">${money(d.revenue||0)}</div></div><div class="stat"><div class="label">Pending Orders</div><div class="value">${d.pending_orders||0}</div></div><div class="stat"><div class="label">Products</div><div class="value">${d.products||0}</div></div><div class="stat"><div class="label">Leads</div><div class="value">${d.leads||0}</div></div><div class="stat"><div class="label">Reviews</div><div class="value">${d.reviews||0}</div></div></div><h3 style="margin-bottom:12px">Recent Orders</h3>${d.recent_orders&&d.recent_orders.length?'<table><thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr></thead><tbody>'+d.recent_orders.map(o=>'<tr><td><strong>'+o.order_number+'</strong></td><td>'+esc(o.customer_name)+'</td><td>'+money(o.total)+'</td><td>'+statusBadge(o.status)+'</td><td>'+fmtDate(o.created_at)+'</td></tr>').join('')+'</tbody></table>':'<p class="empty">No orders yet</p>'}`;
+}
+
+function statusBadge(s){
+  const map={confirmed:'green',paid:'green',shipped:'blue',delivered:'green',pending:'yellow',failed:'red',cancelled:'red',refunded:'grey'};
+  return'<span class="badge '+(map[s]||'grey')+'">'+s+'</span>';
+}
+function payBadge(s){
+  return'<span class="badge '+(s==='paid'?'green':s==='unpaid'?'yellow':'red')+'">'+s+'</span>';
+}
+function fmtDate(iso){if(!iso)return'—';const d=new Date(iso);return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+async function ordersPage(el){
+  const d=await api('/admin/orders?limit=100');
+  const orders=d.orders||[];
+  el.innerHTML=`<div class="topbar"><h2>Orders (${d.total||0})</h2></div><div class="search-bar"><input id="order-search" placeholder="Search by order number or customer..."/></div><div id="orders-table"></div><div id="order-detail-view" style="display:none"></div>`;
+  renderOrdersTable(orders);
+  $('#order-search').oninput=function(){
+    const q=this.value.toLowerCase();
+    const filtered=orders.filter(o=>(o.order_number||'').toLowerCase().includes(q)||(o.customer_name||'').toLowerCase().includes(q)||(o.customer_email||'').toLowerCase().includes(q));
+    renderOrdersTable(filtered);
+  };
+}
+
+function renderOrdersTable(orders){
+  const el=$('#orders-table');if(!el)return;
+  if(!orders.length){el.innerHTML='<p class="empty">No orders found</p>';return}
+  el.innerHTML='<table><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th><th></th></tr></thead><tbody>'+orders.map(o=>{
+    let items=[];try{items=JSON.parse(o.items||'[]')}catch{}
+    return'<tr><td><strong>'+o.order_number+'</strong></td><td>'+esc(o.customer_name)+'<br><small style="color:var(--muted)">'+esc(o.customer_email)+'</small></td><td>'+items.map(i=>i.slug+' ×'+i.qty).join(', ')+'</td><td>'+money(o.total)+'</td><td>'+(o.payment_method==='cod'?'<span class="badge yellow">COD</span>':'<span class="badge blue">Prepaid</span>')+' '+payBadge(o.payment_status)+'</td><td>'+statusBadge(o.status)+'</td><td>'+fmtDate(o.created_at)+'</td><td><button class="btn btn-sm btn-outline" data-view-order="'+o.id+'">View</button></td></tr>'
+  }).join('')+'</tbody></table>';
+  $$('[data-view-order]',el).forEach(btn=>{btn.onclick=()=>viewOrder(btn.dataset.viewOrder)});
+}
+
+async function viewOrder(id){
+  const o=await api('/admin/orders/'+id);
+  let items=[];try{items=JSON.parse(o.items||'[]')}catch{}
+  const dv=$('#order-detail-view');const tbl=$('#orders-table');
+  if(tbl)tbl.style.display='none';if($('.search-bar'))$('.search-bar').style.display='none';
+  dv.style.display='block';
+  dv.innerHTML=`<button class="btn btn-outline" id="back-orders" style="margin-bottom:16px">&larr; Back to Orders</button><div class="order-detail"><h3>Order ${o.order_number}</h3><div class="row"><span class="lbl">Status</span><span>${statusBadge(o.status)}</span></div><div class="row"><span class="lbl">Payment</span><span>${o.payment_method==='cod'?'COD':'Prepaid'} — ${payBadge(o.payment_status)}</span></div><div class="row"><span class="lbl">Total</span><span>${money(o.total)}</span></div>${o.discount>0?'<div class="row"><span class="lbl">Discount</span><span>-'+money(o.discount)+(o.coupon_used?' ('+o.coupon_used+')':'')+'</span></div>':''}<div class="row"><span class="lbl">Customer</span><span>${esc(o.customer_name)}</span></div><div class="row"><span class="lbl">Email</span><span>${esc(o.customer_email)}</span></div><div class="row"><span class="lbl">Phone</span><span>${esc(o.customer_phone)}</span></div><div class="row"><span class="lbl">Address</span><span>${esc(o.shipping_address)}, ${esc(o.shipping_city)}, ${esc(o.shipping_state)} — ${esc(o.shipping_pincode)}</span></div>${o.razorpay_payment_id?'<div class="row"><span class="lbl">Razorpay ID</span><span>'+o.razorpay_payment_id+'</span></div>':''}<div class="row"><span class="lbl">Items</span><span>${items.map(i=>i.slug+' × '+i.qty).join(', ')}</span></div>${o.invoice_number?'<div class="row"><span class="lbl">Invoice</span><span>'+o.invoice_number+'</span></div>':''}<div class="row"><span class="lbl">Tracking</span><span>${o.tracking_number||'Not set'}</span></div><div class="row"><span class="lbl">Date</span><span>${fmtDate(o.created_at)}</span></div></div><div style="display:flex;gap:12px;flex-wrap:wrap"><div class="form-group"><label>Update Status</label><select id="status-sel">${['pending','confirmed','paid','shipped','delivered','cancelled','refunded'].map(s=>'<option'+(s===o.status?' selected':'')+'>'+s+'</option>').join('')}</select></div><button class="btn btn-primary btn-sm" id="save-status">Save Status</button><div class="form-group"><label>Tracking #</label><input id="track-num" value="${esc(o.tracking_number||'')}"/></div><div class="form-group"><label>Courier</label><input id="track-courier" value="${esc(o.courier||'')}"/></div><button class="btn btn-primary btn-sm" id="save-track">Save Tracking</button></div>`;
+  $('#back-orders').onclick=()=>{dv.style.display='none';if(tbl)tbl.style.display='';if($('.search-bar'))$('.search-bar').style.display=''};
+  $('#save-status').onclick=async()=>{
+    try{await api('/admin/orders/'+id+'/status',{method:'PUT',body:JSON.stringify({status:$('#status-sel').value})});toast('Status updated');viewOrder(id)}catch(e){toast(e.message)}
+  };
+  $('#save-track').onclick=async()=>{
+    const tn=$('#track-num').value.trim();const cr=$('#track-courier').value.trim();
+    if(!tn){toast('Enter tracking number');return}
+    try{await api('/admin/orders/'+id+'/tracking',{method:'PUT',body:JSON.stringify({tracking_number:tn,courier:cr})});toast('Tracking updated');viewOrder(id)}catch(e){toast(e.message)}
+  };
+}
+
+async function productsPage(el){
+  const products=await api('/admin/products');
+  el.innerHTML=`<div class="topbar"><h2>Products (${products.length})</h2></div><table><thead><tr><th>Image</th><th>Name</th><th>Slug</th><th>Price</th><th>Active</th><th></th></tr></thead><tbody>${products.map(p=>'<tr><td><img src="'+p.image+'" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:4px"/></td><td><strong>'+esc(p.name)+'</strong><br><small style="color:var(--muted)">'+esc(p.subtitle)+'</small></td><td>'+p.slug+'</td><td>'+money(p.price)+'</td><td>'+(p.active?'<span class="badge green">Yes</span>':'<span class="badge red">No</span>')+'</td><td><button class="btn btn-sm btn-outline" data-edit-prod="'+p.id+'">Edit</button></td></tr>').join('')}</tbody></table>`;
+  $$('[data-edit-prod]',el).forEach(btn=>{btn.onclick=()=>editProduct(btn.dataset.editProd,products)});
+}
+
+async function editProduct(id,products){
+  const p=products.find(x=>x.id==id);if(!p)return;
+  const overlay=document.createElement('div');overlay.className='modal-overlay';
+  overlay.innerHTML=`<div class="modal"><h3>Edit ${esc(p.name)}</h3><div class="form-row"><div class="form-group"><label>Price (paise)</label><input id="ep-price" type="number" value="${p.price}"/></div><div class="form-group"><label>Active</label><select id="ep-active"><option value="1"${p.active?' selected':''}>Yes</option><option value="0"${!p.active?' selected':''}>No</option></select></div></div><div class="modal-actions"><button class="btn btn-outline" id="ep-cancel">Cancel</button><button class="btn btn-primary" id="ep-save">Save</button></div></div>`;
+  document.body.appendChild(overlay);
+  $('#ep-cancel').onclick=()=>overlay.remove();
+  overlay.onclick=e=>{if(e.target===overlay)overlay.remove()};
+  $('#ep-save').onclick=async()=>{
+    try{await api('/admin/products/'+id,{method:'PUT',body:JSON.stringify({price:parseInt($('#ep-price').value),active:parseInt($('#ep-active').value)})});overlay.remove();toast('Product updated');loadPage('products')}catch(e){toast(e.message)}
+  };
+}
+
+async function couponsPage(el){
+  const coupons=await api('/admin/coupons');
+  el.innerHTML=`<div class="topbar"><h2>Coupons (${coupons.length})</h2><button class="btn btn-primary" id="add-coupon">+ New Coupon</button></div><table><thead><tr><th>Code</th><th>Discount</th><th>Type</th><th>Min Cart</th><th>Max Uses</th><th>Used</th><th>Active</th><th>Expires</th><th></th></tr></thead><tbody>${coupons.map(c=>'<tr><td><strong>'+c.code+'</strong></td><td>'+(c.discount_type==='percentage'?c.discount_amount+'%':money(c.discount_amount))+'</td><td>'+(c.discount_type==='percentage'?'Percentage':'Fixed')+(c.max_discount>0?' (max '+money(c.max_discount)+')':'')+'</td><td>'+(c.min_cart>0?money(c.min_cart):'—')+'</td><td>'+(c.max_uses>0?c.max_uses:'∞')+'</td><td>'+c.current_uses+'</td><td>'+(c.active?'<span class="badge green">Yes</span>':'<span class="badge red">No</span>')+'</td><td>'+(c.expires_at?fmtDate(c.expires_at):'Never')+'</td><td><button class="btn btn-sm btn-outline" data-edit-coupon="'+c.id+'">Edit</button> <button class="btn btn-sm btn-danger" data-del-coupon="'+c.id+'">Delete</button></td></tr>').join('')}</tbody></table>`;
+  $('#add-coupon').onclick=()=>couponModal(null);
+  $$('[data-edit-coupon]',el).forEach(btn=>{btn.onclick=()=>couponModal(coupons.find(c=>c.id==btn.dataset.editCoupon))});
+  $$('[data-del-coupon]',el).forEach(btn=>{btn.onclick=async()=>{if(!confirm('Delete this coupon?'))return;try{await api('/admin/coupons/'+btn.dataset.delCoupon,{method:'DELETE'});toast('Coupon deleted');loadPage('coupons')}catch(e){toast(e.message)}}});
+}
+
+function couponModal(existing){
+  const overlay=document.createElement('div');overlay.className='modal-overlay';
+  overlay.innerHTML=`<div class="modal"><h3>${existing?'Edit Coupon':'New Coupon'}</h3><div class="form-row"><div class="form-group"><label>Code</label><input id="cm-code" value="${existing?existing.code:''}"/></div><div class="form-group"><label>Discount Type</label><select id="cm-type"><option value="fixed"${existing&&existing.discount_type!=='percentage'?' selected':''}>Fixed Amount (₹)</option><option value="percentage"${existing&&existing.discount_type==='percentage'?' selected':''}>Percentage (%)</option></select></div></div><div class="form-row"><div class="form-group"><label id="cm-amt-label">Discount Amount (paise)</label><input id="cm-amount" type="number" value="${existing?existing.discount_amount:'0'}"/></div><div class="form-group"><label>Max Discount (paise, 0=unlimited)</label><input id="cm-maxdisc" type="number" value="${existing?existing.max_discount||0:0}"/></div></div><div class="form-row"><div class="form-group"><label>Min Cart (paise)</label><input id="cm-mincart" type="number" value="${existing?existing.min_cart:0}"/></div><div class="form-group"><label>Max Uses (0=unlimited)</label><input id="cm-maxuses" type="number" value="${existing?existing.max_uses:0}"/></div></div><div class="form-row"><div class="form-group"><label>Active</label><select id="cm-active"><option value="1"${!existing||existing.active?' selected':''}>Yes</option><option value="0"${existing&&!existing.active?' selected':''}>No</option></select></div><div class="form-group"><label>Expires At (optional)</label><input id="cm-expires" type="date" value="${existing&&existing.expires_at?existing.expires_at.slice(0,10):''}"/></div></div><div class="modal-actions"><button class="btn btn-outline" id="cm-cancel">Cancel</button><button class="btn btn-primary" id="cm-save">${existing?'Update':'Create'}</button></div></div>`;
+  document.body.appendChild(overlay);
+  const typeSel=$('#cm-type');
+  typeSel.onchange=()=>{$('#cm-amt-label').textContent=typeSel.value==='percentage'?'Discount Percentage (%)':'Discount Amount (paise)'};
+  typeSel.onchange();
+  $('#cm-cancel').onclick=()=>overlay.remove();
+  overlay.onclick=e=>{if(e.target===overlay)overlay.remove()};
+  $('#cm-save').onclick=async()=>{
+    const body={code:$('#cm-code').value.trim(),discount_amount:parseInt($('#cm-amount').value)||0,discount_type:$('#cm-type').value,max_discount:parseInt($('#cm-maxdisc').value)||0,min_cart:parseInt($('#cm-mincart').value)||0,max_uses:parseInt($('#cm-maxuses').value)||0,active:parseInt($('#cm-active').value),expires_at:$('#cm-expires').value||null};
+    if(!body.code){toast('Code required');return}
+    if(!body.discount_amount){toast('Discount required');return}
+    try{
+      if(existing)await api('/admin/coupons/'+existing.id,{method:'PUT',body:JSON.stringify(body)});
+      else await api('/admin/coupons',{method:'POST',body:JSON.stringify(body)});
+      overlay.remove();toast(existing?'Coupon updated':'Coupon created');loadPage('coupons');
+    }catch(e){toast(e.message)}
+  };
+}
+
+async function settingsPage(el){
+  el.innerHTML=`<div class="topbar"><h2>Settings</h2></div><div class="order-detail"><h3>Business Information</h3><div class="row"><span class="lbl">Business Email</span><span>orders.thesixthritu@gmail.com</span></div><div class="row"><span class="lbl">GSTIN</span><span>24AJWPG1884D1Z2</span></div><div class="row"><span class="lbl">Website</span><span>https://tsr-zsaf.vercel.app</span></div></div><div class="order-detail"><h3>Environment Status</h3><p style="color:var(--muted);font-size:13px;margin-bottom:12px">These show whether key services are configured. Set values in Vercel Dashboard → Settings → Environment Variables.</p><div id="env-checks"><p>Checking...</p></div></div>`;
+  try{
+    const h=await api('/health');
+    let checks='<table><thead><tr><th>Service</th><th>Status</th></tr></thead><tbody>';
+    checks+='<tr><td>API</td><td><span class="badge green">Connected</span></td></tr>';
+    checks+='<tr><td>Database (Neon)</td><td><span class="badge green">Connected</span></td></tr>';
+    checks+='</tbody></table>';
+    checks+='<p style="margin-top:12px;color:var(--muted);font-size:12px">SMTP, Google Sheets, and GST configuration status is visible in server logs during cold start.</p>';
+    $('#env-checks').innerHTML=checks;
+  }catch(e){$('#env-checks').innerHTML='<p style="color:var(--red)">'+e.message+'</p>'}
+}
+
+render();
+</script>
+</body>
+</html>

@@ -172,7 +172,7 @@ router.get('/orders/:id', authenticate, async (req, res) => {
 router.put('/orders/:id/status', authenticate, requireRole('super_admin', 'admin'), async (req, res) => {
   try {
     const { status } = req.body;
-    const valid = ['pending', 'paid', 'shipped', 'delivered', 'cancelled', 'refunded'];
+    const valid = ['pending', 'confirmed', 'paid', 'shipped', 'delivered', 'cancelled', 'refunded'];
     if (!valid.includes(status)) return res.status(400).json({ error: 'Invalid status' });
 
     await db.prepare("UPDATE orders SET status = ?, updated_at = NOW() WHERE id = ?").run(status, req.params.id);
@@ -212,12 +212,13 @@ router.get('/coupons', authenticate, async (req, res) => {
 
 router.post('/coupons', authenticate, requireRole('super_admin', 'admin'), async (req, res) => {
   try {
-    const { code, discount_amount, min_cart, max_uses, active, expires_at } = req.body;
+    const { code, discount_amount, discount_type, max_discount, min_cart, max_uses, active, expires_at } = req.body;
     if (!code || !discount_amount) return res.status(400).json({ error: 'Code and discount required' });
+    const dtype = discount_type === 'percentage' ? 'percentage' : 'fixed';
 
     const result = await db.prepare(
-      'INSERT INTO coupons (code, discount_amount, min_cart, max_uses, active, expires_at) VALUES (?, ?, ?, ?, ?, ?)'
-    ).run(code.toUpperCase(), discount_amount, min_cart || 0, max_uses || 0, active ?? 1, expires_at || null);
+      'INSERT INTO coupons (code, discount_amount, discount_type, max_discount, min_cart, max_uses, active, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(code.toUpperCase(), discount_amount, dtype, max_discount || 0, min_cart || 0, max_uses || 0, active ?? 1, expires_at || null);
 
     res.status(201).json({ id: result.lastInsertRowid });
   } catch (err) {
@@ -227,7 +228,7 @@ router.post('/coupons', authenticate, requireRole('super_admin', 'admin'), async
 
 router.put('/coupons/:id', authenticate, requireRole('super_admin', 'admin'), async (req, res) => {
   try {
-    const fields = ['code', 'discount_amount', 'min_cart', 'max_uses', 'active', 'expires_at'];
+    const fields = ['code', 'discount_amount', 'discount_type', 'max_discount', 'min_cart', 'max_uses', 'active', 'expires_at'];
     const sets = [];
     const vals = [];
     for (const f of fields) {
