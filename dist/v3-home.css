@@ -998,6 +998,17 @@
   background-position: right 12px center;
   padding-right: 36px;
 }
+.tsr-field.has-error input,
+.tsr-field.has-error select {
+  border-color: #c0392b;
+  background: #fef6f5;
+}
+.field-error {
+  display: block;
+  color: #c0392b;
+  font-size: 0.75rem;
+  margin-top: 4px;
+}
 .tsr-field-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
