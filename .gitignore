@@ -2,5 +2,9 @@ node_modules/
 server/.env
 server/data/
 *.db
+*.json.key
+service-account*.json
 .DS_Store
 Thumbs.db
+*.zip
+The Sixth Ritu/

@@ -1003,6 +1003,45 @@
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
 }
+.tsr-payment-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.tsr-pay-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid rgba(162, 125, 78, .2);
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+}
+.tsr-pay-option:hover {
+  border-color: var(--v3-gold, #a27d4e);
+}
+.tsr-pay-option input[type="radio"] {
+  accent-color: var(--v3-gold, #a27d4e);
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.tsr-pay-option input[type="radio"]:checked ~ .tsr-pay-label strong {
+  color: var(--v3-gold, #a27d4e);
+}
+.tsr-pay-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.tsr-pay-label strong {
+  font: 600 .85rem/1.3 var(--v3-sans, 'DM Sans', sans-serif);
+  color: var(--v3-charcoal, #1a1815);
+}
+.tsr-pay-label small {
+  font-size: .75rem;
+  color: #888;
+}
 .tsr-checkout-submit {
   width: 100%;
   padding: 14px;

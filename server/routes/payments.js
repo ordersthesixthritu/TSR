@@ -1,14 +1,27 @@
 import { Router } from 'express';
 import crypto from 'crypto';
+import fs from 'fs';
 import Razorpay from 'razorpay';
 import db from '../db/index.js';
+import { queueOrderConfirmation, queueOwnerNotification, queueInvoiceEmail } from '../services/notifications.js';
+import { syncOrderToSheet, updateOrderInSheet } from '../services/sheets.js';
+import { generateInvoice } from '../services/invoice.js';
 
 const router = Router();
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+let _razorpay;
+function getRazorpay() {
+  if (!_razorpay) {
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+      throw new Error('Razorpay credentials not configured');
+    }
+    _razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+  }
+  return _razorpay;
+}
 
 function validateCart(items) {
   let total = 0;
@@ -31,54 +44,136 @@ function validateCoupon(code, cartTotal) {
   return c.discount_amount;
 }
 
+function generateOrderNumber() {
+  return `TSR-${Date.now().toString(36).toUpperCase()}`;
+}
+
+function normalizeCustomer(raw) {
+  if (!raw) return null;
+  const phone = (raw.phone || raw.mobile || '').replace(/\s/g, '');
+  const addr1 = (raw.address || raw.address1 || '').trim();
+  const addr2 = (raw.address2 || '').trim();
+  const landmark = (raw.landmark || '').trim();
+  const address = [addr1, addr2, landmark].filter(Boolean).join(', ');
+  return {
+    name: (raw.name || '').trim(),
+    email: (raw.email || '').trim().toLowerCase(),
+    phone,
+    address,
+    city: (raw.city || '').trim(),
+    state: raw.state || '',
+    pincode: raw.pincode || raw.pin || '',
+  };
+}
+
+function validateCustomer(customer) {
+  if (!customer) return 'Customer details required';
+  if (!customer.name || customer.name.length < 2) return 'Full name is required';
+  if (!customer.phone || !/^[6-9]\d{9}$/.test(customer.phone)) return 'Valid 10-digit Indian mobile number required';
+  if (!customer.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) return 'Valid email address required';
+  if (!customer.address || customer.address.length < 5) return 'Shipping address required';
+  if (!customer.city || customer.city.length < 2) return 'City is required';
+  if (!customer.state) return 'State is required';
+  if (!customer.pincode || !/^\d{6}$/.test(customer.pincode)) return 'Valid 6-digit pincode required';
+  return null;
+}
+
+// ─── Prepaid: Create Razorpay order ───
+
 router.post('/create-order', async (req, res) => {
   try {
-    const { items, coupon } = req.body;
+    const { items, coupon, customer: rawCustomer, paymentMethod } = req.body;
+
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: 'Cart is empty' });
     }
 
+    const customer = normalizeCustomer(rawCustomer);
+    const customerError = validateCustomer(customer);
+    if (customerError) return res.status(400).json({ error: customerError });
+
     let total = validateCart(items);
     if (total === null) return res.status(400).json({ error: 'Invalid cart' });
 
+    const subtotal = total;
     const discount = validateCoupon(coupon, total);
     total = Math.max(0, total - discount);
 
-    const order = await razorpay.orders.create({
+    const orderNumber = generateOrderNumber();
+
+    // COD flow — no Razorpay order needed
+    if (paymentMethod === 'cod') {
+      db.prepare(
+        `INSERT INTO orders (order_number, status, payment_method, payment_status, customer_name, customer_email, customer_phone, shipping_address, shipping_city, shipping_state, shipping_pincode, items, subtotal, discount, total, coupon_used)
+         VALUES (?, 'confirmed', 'cod', 'unpaid', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).run(
+        orderNumber,
+        customer.name, customer.email, customer.phone,
+        customer.address, customer.city, customer.state, customer.pincode,
+        JSON.stringify(items.map(i => ({ slug: i.slug, qty: i.qty }))),
+        subtotal, discount, total,
+        coupon || ''
+      );
+
+      if (coupon) {
+        db.prepare('UPDATE coupons SET current_uses = current_uses + 1 WHERE code = ?').run(coupon.toUpperCase());
+      }
+
+      const order = db.prepare('SELECT * FROM orders WHERE order_number = ?').get(orderNumber);
+      handlePostOrder(order);
+
+      return res.json({
+        success: true,
+        orderNumber,
+        paymentMethod: 'cod',
+        total,
+      });
+    }
+
+    // Prepaid flow — create Razorpay order
+    const rzpOrder = await getRazorpay().orders.create({
       amount: total,
       currency: 'INR',
-      receipt: `tsr_${Date.now()}`,
+      receipt: orderNumber,
       notes: {
         items: JSON.stringify(items.map(i => ({ slug: i.slug, qty: i.qty }))),
         coupon: coupon || '',
+        customer_name: customer.name,
+        customer_phone: customer.phone,
       },
     });
 
-    const orderNumber = `TSR-${Date.now().toString(36).toUpperCase()}`;
     db.prepare(
-      `INSERT INTO orders (order_number, razorpay_order_id, status, items, subtotal, discount, total, coupon_used)
-       VALUES (?, ?, 'pending', ?, ?, ?, ?, ?)`
+      `INSERT INTO orders (order_number, razorpay_order_id, status, payment_method, payment_status, customer_name, customer_email, customer_phone, shipping_address, shipping_city, shipping_state, shipping_pincode, items, subtotal, discount, total, coupon_used)
+       VALUES (?, ?, 'pending', 'prepaid', 'unpaid', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(
-      orderNumber, order.id,
+      orderNumber, rzpOrder.id,
+      customer.name, customer.email, customer.phone,
+      customer.address, customer.city, customer.state, customer.pincode,
       JSON.stringify(items.map(i => ({ slug: i.slug, qty: i.qty }))),
-      total + discount,
-      discount,
-      total,
+      subtotal, discount, total,
       coupon || ''
     );
 
     res.json({
-      orderId: order.id,
-      amount: order.amount,
-      currency: order.currency,
+      orderId: rzpOrder.id,
+      amount: rzpOrder.amount,
+      currency: rzpOrder.currency,
       keyId: process.env.RAZORPAY_KEY_ID,
       orderNumber,
+      prefill: {
+        name: customer.name,
+        email: customer.email,
+        contact: customer.phone,
+      },
     });
   } catch (err) {
     console.error('create-order error:', err);
     res.status(500).json({ error: 'Could not create order' });
   }
 });
+
+// ─── Prepaid: Verify Razorpay payment ───
 
 router.post('/verify', (req, res) => {
   try {
@@ -87,11 +182,10 @@ router.post('/verify', (req, res) => {
       return res.status(400).json({ error: 'Missing payment details' });
     }
 
-    const existing = db.prepare('SELECT status FROM orders WHERE razorpay_order_id = ?').get(razorpay_order_id);
+    const existing = db.prepare('SELECT * FROM orders WHERE razorpay_order_id = ?').get(razorpay_order_id);
     if (!existing) return res.status(404).json({ error: 'Order not found' });
-    if (existing.status === 'paid') {
-      const saved = db.prepare('SELECT order_number FROM orders WHERE razorpay_order_id = ?').get(razorpay_order_id);
-      return res.json({ verified: true, orderId: razorpay_order_id, paymentId: razorpay_payment_id, orderNumber: saved?.order_number, note: 'Already verified' });
+    if (existing.payment_status === 'paid') {
+      return res.json({ verified: true, orderId: razorpay_order_id, paymentId: razorpay_payment_id, orderNumber: existing.order_number, note: 'Already verified' });
     }
 
     const expected = crypto
@@ -104,27 +198,40 @@ router.post('/verify', (req, res) => {
     }
 
     db.prepare(
-      "UPDATE orders SET razorpay_payment_id = ?, status = 'paid', updated_at = datetime('now') WHERE razorpay_order_id = ? AND status = 'pending'"
+      "UPDATE orders SET razorpay_payment_id = ?, status = 'confirmed', payment_status = 'paid', updated_at = datetime('now') WHERE razorpay_order_id = ? AND status = 'pending'"
     ).run(razorpay_payment_id, razorpay_order_id);
 
-    const savedOrder = db.prepare('SELECT order_number, coupon_used FROM orders WHERE razorpay_order_id = ?').get(razorpay_order_id);
-    if (savedOrder?.coupon_used) {
-      db.prepare('UPDATE coupons SET current_uses = current_uses + 1 WHERE code = ?').run(savedOrder.coupon_used);
+    if (existing.coupon_used) {
+      db.prepare('UPDATE coupons SET current_uses = current_uses + 1 WHERE code = ?').run(existing.coupon_used);
     }
 
-    res.json({ verified: true, orderId: razorpay_order_id, paymentId: razorpay_payment_id, orderNumber: savedOrder?.order_number });
+    const order = db.prepare('SELECT * FROM orders WHERE razorpay_order_id = ?').get(razorpay_order_id);
+    handlePostOrder(order);
+
+    res.json({ verified: true, orderId: razorpay_order_id, paymentId: razorpay_payment_id, orderNumber: order.order_number });
   } catch (err) {
     console.error('verify error:', err);
     res.status(500).json({ error: 'Verification failed' });
   }
 });
 
+// ─── Razorpay webhook ───
+
 router.post('/webhook', (req, res) => {
   try {
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      return res.status(503).json({ error: 'Webhook not configured' });
+    }
+
     const signature = req.headers['x-razorpay-signature'];
+    if (!signature) {
+      return res.status(400).json({ error: 'Missing signature header' });
+    }
+
     const rawBody = Buffer.isBuffer(req.body) ? req.body.toString('utf-8') : typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
     const expected = crypto
-      .createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET)
+      .createHmac('sha256', webhookSecret)
       .update(rawBody)
       .digest('hex');
 
@@ -133,33 +240,149 @@ router.post('/webhook', (req, res) => {
     }
 
     const event = JSON.parse(rawBody);
+    const eventId = event.payload?.payment?.entity?.id || event.payload?.refund?.entity?.id || `evt_${Date.now()}`;
     const orderId = event.payload?.payment?.entity?.order_id;
     const paymentId = event.payload?.payment?.entity?.id || event.payload?.refund?.entity?.payment_id;
 
+    // Deduplicate
+    const existing = db.prepare('SELECT id FROM webhook_events WHERE event_id = ?').get(eventId);
+    if (existing) return res.json({ status: 'ok', note: 'duplicate' });
+
+    db.prepare(
+      'INSERT INTO webhook_events (event_id, event_type, razorpay_order_id, razorpay_payment_id, payload) VALUES (?, ?, ?, ?, ?)'
+    ).run(eventId, event.event, orderId || '', paymentId || '', rawBody);
+
     switch (event.event) {
       case 'payment.captured': {
-        const order = db.prepare('SELECT status FROM orders WHERE razorpay_order_id = ?').get(orderId);
-        if (order && order.status !== 'paid') {
-          db.prepare("UPDATE orders SET status = 'paid', razorpay_payment_id = ?, updated_at = datetime('now') WHERE razorpay_order_id = ?")
-            .run(paymentId, orderId);
+        const order = db.prepare('SELECT * FROM orders WHERE razorpay_order_id = ?').get(orderId);
+        if (order && order.payment_status !== 'paid') {
+          db.prepare(
+            "UPDATE orders SET status = 'confirmed', payment_status = 'paid', razorpay_payment_id = ?, updated_at = datetime('now') WHERE razorpay_order_id = ?"
+          ).run(paymentId, orderId);
+
+          if (order.coupon_used && order.status === 'pending') {
+            db.prepare('UPDATE coupons SET current_uses = current_uses + 1 WHERE code = ?').run(order.coupon_used);
+          }
+
+          const updated = db.prepare('SELECT * FROM orders WHERE razorpay_order_id = ?').get(orderId);
+          handlePostOrder(updated);
         }
         break;
       }
-      case 'payment.failed':
-        db.prepare("UPDATE orders SET status = 'cancelled', updated_at = datetime('now') WHERE razorpay_order_id = ? AND status = 'pending'")
-          .run(orderId);
+      case 'payment.failed': {
+        db.prepare(
+          "UPDATE orders SET status = 'failed', payment_status = 'failed', updated_at = datetime('now') WHERE razorpay_order_id = ? AND status = 'pending'"
+        ).run(orderId);
         break;
-      case 'refund.created':
-        db.prepare("UPDATE orders SET status = 'refunded', updated_at = datetime('now') WHERE razorpay_payment_id = ?")
-          .run(event.payload.refund.entity.payment_id);
+      }
+      case 'refund.created': {
+        const refundPaymentId = event.payload.refund.entity.payment_id;
+        db.prepare(
+          "UPDATE orders SET payment_status = 'refunded', updated_at = datetime('now') WHERE razorpay_payment_id = ?"
+        ).run(refundPaymentId);
+
+        const refundedOrder = db.prepare('SELECT order_number FROM orders WHERE razorpay_payment_id = ?').get(refundPaymentId);
+        if (refundedOrder) {
+          updateOrderInSheet(refundedOrder.order_number, { payment_status: 'refunded' }).catch(() => {});
+        }
         break;
+      }
     }
 
+    db.prepare('UPDATE webhook_events SET processed = 1 WHERE event_id = ?').run(eventId);
     res.json({ status: 'ok' });
   } catch (err) {
     console.error('webhook error:', err);
     res.status(500).json({ error: 'Webhook processing failed' });
   }
 });
+
+// ─── Order status (public, by order number + email/phone) ───
+
+router.get('/order-status/:orderNumber', (req, res) => {
+  try {
+    const { orderNumber } = req.params;
+    const { email, phone } = req.query;
+
+    if (!email && !phone) {
+      return res.status(400).json({ error: 'Email or phone required for verification' });
+    }
+
+    const order = db.prepare('SELECT * FROM orders WHERE order_number = ?').get(orderNumber);
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+
+    const emailMatch = email && order.customer_email === email.trim().toLowerCase();
+    const phoneMatch = phone && order.customer_phone === phone.replace(/\s/g, '');
+    if (!emailMatch && !phoneMatch) {
+      return res.status(403).json({ error: 'Verification failed — email or phone does not match' });
+    }
+
+    const items = JSON.parse(order.items || '[]').map(i => {
+      const product = db.prepare('SELECT name, price, image FROM products WHERE slug = ?').get(i.slug);
+      return { slug: i.slug, qty: i.qty, name: product?.name || i.slug, price: product?.price || 0, image: product?.image || '' };
+    });
+
+    res.json({
+      orderNumber: order.order_number,
+      status: order.status,
+      paymentMethod: order.payment_method,
+      paymentStatus: order.payment_status,
+      items,
+      subtotal: order.subtotal,
+      discount: order.discount,
+      total: order.total,
+      trackingNumber: order.tracking_number || null,
+      courier: order.courier || null,
+      invoiceNumber: order.invoice_number || null,
+      createdAt: order.created_at,
+    });
+  } catch (err) {
+    console.error('order-status error:', err);
+    res.status(500).json({ error: 'Could not fetch order status' });
+  }
+});
+
+// ─── Invoice download ───
+
+router.get('/invoice/:orderNumber', (req, res) => {
+  try {
+    const { orderNumber } = req.params;
+    const invoice = db.prepare('SELECT pdf_path FROM invoices WHERE order_number = ?').get(orderNumber);
+    if (!invoice || !invoice.pdf_path || !fs.existsSync(invoice.pdf_path)) {
+      return res.status(404).json({ error: 'Invoice not found' });
+    }
+    res.download(invoice.pdf_path, `Invoice-${orderNumber}.pdf`);
+  } catch (err) {
+    console.error('invoice download error:', err);
+    res.status(500).json({ error: 'Could not download invoice' });
+  }
+});
+
+// ─── Post-order automation (runs async, does not block response) ───
+
+function handlePostOrder(order) {
+  if (!order) return;
+
+  setImmediate(async () => {
+    try {
+      queueOrderConfirmation(order);
+      queueOwnerNotification(order);
+
+      if (order.payment_status === 'paid') {
+        const result = await generateInvoice(order);
+        if (result) {
+          queueInvoiceEmail(order, result.pdfPath);
+        }
+      }
+
+      await syncOrderToSheet(order);
+    } catch (err) {
+      console.error('post-order automation error:', err);
+      db.prepare(
+        "INSERT INTO failed_jobs (job_type, order_id, error, payload) VALUES (?, ?, ?, ?)"
+      ).run('post_order', order.id, err.message, JSON.stringify({ order_number: order.order_number }));
+    }
+  });
+}
 
 export default router;
