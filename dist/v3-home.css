@@ -998,6 +998,16 @@
   background-position: right 12px center;
   padding-right: 36px;
 }
+.summary-row.tax-note {
+  justify-content: center;
+  border-top: none;
+  padding-top: 8px;
+}
+.summary-row.tax-note span {
+  font-size: 0.75rem;
+  color: #999;
+  font-style: italic;
+}
 .tsr-field.has-error input,
 .tsr-field.has-error select {
   border-color: #c0392b;
@@ -1366,7 +1376,7 @@
 .tsr-popup-visual-tag {
   font: 400 .7rem/1 var(--v3-serif, 'Cormorant Garamond', serif);
   letter-spacing: .12em;
-  color: rgba(255,255,255,.85);
+  color: var(--v3-gold, #a27d4e);
   font-style: italic;
 }
 

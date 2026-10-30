@@ -169,6 +169,7 @@ export async function queueOrderConfirmation(order) {
         ${order.discount > 0 ? `<tr><td style="padding:4px 0;color:#6b6560;">Discount</td><td style="text-align:right;color:#a27d4e;">-${formatPaise(order.discount)}</td></tr>` : ''}
         <tr><td style="padding:4px 0;color:#6b6560;">Shipping</td><td style="text-align:right;">Complimentary</td></tr>
         <tr style="font-weight:700;font-size:16px;"><td style="padding:8px 0;border-top:2px solid #1a1815;">Total</td><td style="text-align:right;padding:8px 0;border-top:2px solid #1a1815;">${formatPaise(order.total)}</td></tr>
+        <tr><td colspan="2" style="padding:4px 0;color:#999;font-size:11px;text-align:right;">Inclusive of all applicable taxes</td></tr>
       </table>
 
       <div style="background:#f0ece5;padding:20px;border-radius:4px;margin:0 0 24px;">
