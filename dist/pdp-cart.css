@@ -7,8 +7,8 @@
 /* ── PDP Above the Fold ── */
 .product-page {
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
-  gap: clamp(40px, 6vw, 80px);
+  grid-template-columns: 54% 1fr;
+  gap: clamp(36px, 5vw, 64px);
   padding: 0 0 80px;
   align-items: start;
 }
@@ -16,8 +16,15 @@
 .product-gallery {
   position: sticky;
   top: 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gallery-main {
+  position: relative;
   background: #f1ede6;
-  min-height: 580px;
+  min-height: 540px;
   overflow: hidden;
 }
 
@@ -36,7 +43,7 @@
 .gallery-slide {
   flex: 0 0 100%;
   min-width: 100%;
-  min-height: 580px;
+  min-height: 540px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -59,28 +66,6 @@
 
 .gallery-slide:hover img:not(.pdp-infographic) {
   transform: scale(1.04);
-}
-
-.gallery-dots {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  padding: 14px 0;
-}
-
-.gallery-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: 1.5px solid var(--v3-gold, #a27d4e);
-  background: transparent;
-  padding: 0;
-  cursor: pointer;
-  transition: background .3s;
-}
-
-.gallery-dot.active {
-  background: var(--v3-gold, #a27d4e);
 }
 
 .gallery-arrow {
@@ -109,6 +94,38 @@
 
 .gallery-prev { left: 12px; }
 .gallery-next { right: 12px; }
+
+/* ── Gallery Thumbnails ── */
+.gallery-thumbs {
+  display: flex;
+  gap: 10px;
+  padding: 0 4px;
+}
+
+.gallery-thumb {
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  border: 2px solid transparent;
+  background: #f1ede6;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color .25s;
+}
+
+.gallery-thumb.active {
+  border-color: var(--gold, #a27d4e);
+}
+
+.gallery-thumb:hover:not(.active) {
+  border-color: var(--line, #ddd5c8);
+}
+
+.gallery-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 
 /* ── Product Summary ── */
 .product-summary {
@@ -153,34 +170,102 @@
   max-width: 480px;
 }
 
-.product-summary .pdp-notes {
-  font-size: .8rem;
-  text-transform: uppercase;
-  letter-spacing: .1em;
-  color: var(--muted, #8a8477);
+/* ── Character & Fragrance Profile ── */
+.product-summary .pdp-character {
+  font: italic 400 1rem/1.6 var(--serif, 'Cormorant Garamond', Georgia, serif);
+  color: var(--gold, #a27d4e);
+  margin: 0 0 16px;
+}
+
+.pdp-fragrance-profile {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
   margin: 0 0 28px;
   padding-bottom: 28px;
   border-bottom: 1px solid var(--line, #ddd5c8);
 }
 
-.product-summary .price {
-  font: 400 1.4rem var(--serif, Georgia, serif);
+.pdp-fp-label {
+  font-size: .68rem;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--muted, #8a8477);
+  white-space: nowrap;
+}
+
+.pdp-fp-notes {
+  font-size: .85rem;
+  letter-spacing: .04em;
   color: var(--ink, #1a1816);
-  margin: 0 0 20px;
+}
+
+/* ── Price Block ── */
+.pdp-price-block {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0 0 24px;
+}
+
+.pdp-price {
+  font: 300 2rem/1 var(--serif, 'Cormorant Garamond', Georgia, serif);
+  color: var(--ink, #1a1816);
   letter-spacing: .02em;
 }
 
-.product-summary .price del {
+.pdp-price-tax {
+  font: 400 .72rem/1 var(--sans, 'DM Sans', system-ui, sans-serif);
   color: var(--muted, #8a8477);
-  font-weight: 300;
-  margin-right: 6px;
+  letter-spacing: .04em;
 }
 
-.product-summary .price-tax {
-  font-size: .75rem;
-  color: var(--muted, #8a8477);
-  font-family: var(--sans, system-ui, sans-serif);
+/* ── Delivery Note ── */
+.pdp-delivery-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .76rem;
   letter-spacing: .06em;
+  color: var(--muted, #8a8477);
+  margin: 20px 0 0;
+  padding: 16px 0;
+  border-top: 1px solid var(--line, #ddd5c8);
+  border-bottom: 1px solid var(--line, #ddd5c8);
+}
+
+.pdp-delivery-note span {
+  color: var(--gold, #a27d4e);
+  font-size: .9rem;
+}
+
+/* ── Structured Notes in Accordion ── */
+.notes-structured {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notes-row {
+  display: flex;
+  gap: 14px;
+  align-items: baseline;
+}
+
+.notes-cat {
+  font-size: .68rem;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--gold, #a27d4e);
+  min-width: 90px;
+  flex-shrink: 0;
+  font-weight: 500;
+}
+
+.notes-list {
+  font-size: .85rem;
+  line-height: 1.6;
+  color: var(--ink, #1a1816);
 }
 
 /* ── Purchase Area ── */
@@ -1047,6 +1132,9 @@ body.cart-open {
   .product-gallery {
     position: relative;
     top: auto;
+  }
+
+  .gallery-main {
     min-height: 360px;
   }
 
@@ -1071,6 +1159,16 @@ body.cart-open {
     font-size: 14px;
   }
 
+  .gallery-thumbs {
+    padding: 0 16px;
+    gap: 8px;
+  }
+
+  .gallery-thumb {
+    width: 60px;
+    height: 60px;
+  }
+
   .product-summary {
     padding: 28px 20px 0;
   }
@@ -1081,6 +1179,24 @@ body.cart-open {
 
   .product-summary .product-subtitle {
     font-size: 1.1rem;
+  }
+
+  .pdp-fragrance-profile {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .pdp-price {
+    font-size: 1.6rem;
+  }
+
+  .notes-row {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .notes-cat {
+    min-width: unset;
   }
 
   /* Mobile Sticky Bar */
@@ -1154,7 +1270,7 @@ body.cart-open {
 }
 
 @media (max-width: 480px) {
-  .product-gallery {
+  .gallery-main {
     min-height: 280px;
   }
 
@@ -1170,6 +1286,15 @@ body.cart-open {
   .gallery-slide img.pdp-infographic {
     width: 100%;
     max-height: none;
+  }
+
+  .gallery-thumbs {
+    padding: 0 12px;
+  }
+
+  .gallery-thumb {
+    width: 52px;
+    height: 52px;
   }
 
   .pdp-secondary-actions {
