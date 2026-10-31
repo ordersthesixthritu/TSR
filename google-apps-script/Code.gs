@@ -26,8 +26,7 @@ var ORDERS_HEADERS = [
   'Order ID', 'Order Date', 'Order Time', 'Customer Name', 'Email',
   'Mobile Number', 'Shipping Address', 'City', 'State', 'Pincode',
   'Product Names', 'SKU', 'Quantity', 'Item Subtotal', 'Discount',
-  'Shipping Charges', 'Taxable Value', 'CGST', 'SGST', 'IGST',
-  'Final Order Total', 'Payment Method', 'Payment Status',
+  'Shipping Charges', 'Final Order Total', 'Payment Method', 'Payment Status',
   'Razorpay Order ID', 'Razorpay Payment ID', 'Order Status',
   'Invoice Number', 'Invoice Link', 'Tracking Number', 'Courier',
   'Last Updated'
@@ -45,8 +44,7 @@ var PAYMENTS_HEADERS = [
 
 var INVOICES_HEADERS = [
   'Invoice Number', 'Order ID', 'Customer', 'Invoice Date',
-  'Taxable Amount', 'GST Amount', 'Invoice Total', 'PDF Link',
-  'Email Status'
+  'Invoice Total', 'PDF Link', 'Email Status'
 ];
 
 var FAILED_HEADERS = [
@@ -58,7 +56,7 @@ var SETTINGS_HEADERS = ['Setting', 'Value'];
 var DEFAULT_SETTINGS = [
   ['Business Name', 'The Sixth Ritu'],
   ['Business Email', ''],
-  ['GSTIN', '24AJWPG1884D1Z2'],
+  ['Business Registration', '24AJWPG1884D1Z2'],
   ['Shipping Rate', '0'],
   ['COD Enabled', 'true'],
   ['Currency', 'INR']
@@ -188,8 +186,8 @@ function applyConditionalFormatting(ss) {
   var ordersSheet = ss.getSheetByName(SHEET_NAMES.ORDERS);
   if (!ordersSheet) return;
 
-  // Payment Status column (W = col 23)
-  var paymentCol = 23;
+  // Payment Status column (S = col 19)
+  var paymentCol = 19;
   var lastRow = Math.max(ordersSheet.getMaxRows(), 500);
   var range = ordersSheet.getRange(2, paymentCol, lastRow - 1, 1);
 
@@ -223,8 +221,8 @@ function applyConditionalFormatting(ss) {
     .setRanges([range])
     .build());
 
-  // Order Status column (Z = col 26)
-  var statusCol = 26;
+  // Order Status column (V = col 22)
+  var statusCol = 22;
   var statusRange = ordersSheet.getRange(2, statusCol, lastRow - 1, 1);
 
   rules.push(SpreadsheetApp.newConditionalFormatRule()
@@ -287,10 +285,6 @@ function addOrderToSheet(orderData) {
     formatCurrency(orderData.itemSubtotal || 0),
     formatCurrency(orderData.discount || 0),
     formatCurrency(orderData.shippingCharges || 0),
-    formatCurrency(orderData.taxableValue || 0),
-    formatCurrency(orderData.cgst || 0),
-    formatCurrency(orderData.sgst || 0),
-    formatCurrency(orderData.igst || 0),
     formatCurrency(orderData.finalTotal || 0),
     (orderData.paymentMethod || '').toUpperCase(),
     (orderData.paymentStatus || 'UNPAID').toUpperCase(),
@@ -338,12 +332,12 @@ function updateOrderStatus(orderNumber, status, paymentStatus) {
   var now = Utilities.formatDate(new Date(), 'Asia/Kolkata', 'dd/MM/yyyy HH:mm:ss');
 
   if (status) {
-    ordersSheet.getRange(row, 26).setValue(status); // Order Status
+    ordersSheet.getRange(row, 22).setValue(status); // Order Status
   }
   if (paymentStatus) {
-    ordersSheet.getRange(row, 23).setValue(paymentStatus.toUpperCase()); // Payment Status
+    ordersSheet.getRange(row, 19).setValue(paymentStatus.toUpperCase()); // Payment Status
   }
-  ordersSheet.getRange(row, 31).setValue(now); // Last Updated
+  ordersSheet.getRange(row, 27).setValue(now); // Last Updated
 
   // Update payment sheet too
   if (paymentStatus) {
@@ -364,17 +358,17 @@ function updatePaymentRecord(data) {
   }
 
   if (data.paymentStatus) {
-    ordersSheet.getRange(row, 23).setValue(data.paymentStatus.toUpperCase());
+    ordersSheet.getRange(row, 19).setValue(data.paymentStatus.toUpperCase());
   }
   if (data.razorpayPaymentId) {
-    ordersSheet.getRange(row, 25).setValue(data.razorpayPaymentId);
+    ordersSheet.getRange(row, 21).setValue(data.razorpayPaymentId);
   }
   if (data.razorpayOrderId) {
-    ordersSheet.getRange(row, 24).setValue(data.razorpayOrderId);
+    ordersSheet.getRange(row, 20).setValue(data.razorpayOrderId);
   }
 
   var now = Utilities.formatDate(new Date(), 'Asia/Kolkata', 'dd/MM/yyyy HH:mm:ss');
-  ordersSheet.getRange(row, 31).setValue(now);
+  ordersSheet.getRange(row, 27).setValue(now);
 
   updatePaymentStatus(ss, data.orderNumber, data.paymentStatus);
 
@@ -489,8 +483,6 @@ function addInvoiceRecord(data) {
     data.orderId || '',
     data.customer || '',
     data.invoiceDate || Utilities.formatDate(new Date(), 'Asia/Kolkata', 'dd/MM/yyyy'),
-    formatCurrency(data.taxableAmount || 0),
-    formatCurrency(data.gstAmount || 0),
     formatCurrency(data.invoiceTotal || 0),
     data.pdfLink || '',
     data.emailStatus || 'pending'
@@ -501,8 +493,8 @@ function addInvoiceRecord(data) {
     var ordersSheet = ss.getSheetByName(SHEET_NAMES.ORDERS);
     var row = findOrderRow(ordersSheet, data.orderId);
     if (row > 0) {
-      ordersSheet.getRange(row, 27).setValue(data.invoiceNumber || '');
-      ordersSheet.getRange(row, 28).setValue(data.pdfLink || '');
+      ordersSheet.getRange(row, 23).setValue(data.invoiceNumber || '');
+      ordersSheet.getRange(row, 24).setValue(data.pdfLink || '');
     }
   }
 
@@ -577,10 +569,10 @@ function onEdit(e) {
   var row = e.range.getRow();
   if (row <= 1) return; // header row
 
-  // Order Status column = 26, Payment Status column = 23
-  if (col === 26 || col === 23) {
+  // Order Status column = 22, Payment Status column = 19
+  if (col === 22 || col === 19) {
     var now = Utilities.formatDate(new Date(), 'Asia/Kolkata', 'dd/MM/yyyy HH:mm:ss');
-    sheet.getRange(row, 31).setValue(now); // Last Updated
+    sheet.getRange(row, 27).setValue(now); // Last Updated
   }
 }
 
@@ -613,9 +605,9 @@ function reconcileOrders() {
 
   for (var i = 1; i < ordersData.length; i++) {
     var orderNumber = ordersData[i][0];
-    var paymentMethod = (ordersData[i][21] || '').toString().toUpperCase();
-    var paymentStatus = (ordersData[i][22] || '').toString().toUpperCase();
-    var orderStatus = (ordersData[i][25] || '').toString().toLowerCase();
+    var paymentMethod = (ordersData[i][17] || '').toString().toUpperCase();
+    var paymentStatus = (ordersData[i][18] || '').toString().toUpperCase();
+    var orderStatus = (ordersData[i][21] || '').toString().toLowerCase();
 
     // Check: paid order should not be "pending"
     if (paymentStatus === 'PAID' && orderStatus === 'pending') {
@@ -623,7 +615,7 @@ function reconcileOrders() {
     }
 
     // Check: prepaid confirmed order should have payment ID
-    if (paymentMethod === 'PREPAID' && paymentStatus === 'PAID' && !ordersData[i][24]) {
+    if (paymentMethod === 'PREPAID' && paymentStatus === 'PAID' && !ordersData[i][20]) {
       issues.push('Order ' + orderNumber + ': prepaid+paid but missing Razorpay Payment ID');
     }
 
@@ -701,10 +693,10 @@ function showDashboard() {
   var pendingOrders = 0;
 
   for (var i = 1; i < data.length; i++) {
-    var total = parseFloat(String(data[i][20]).replace(/[₹,]/g, '')) || 0;
-    var payStatus = (data[i][22] || '').toString().toUpperCase();
-    var payMethod = (data[i][21] || '').toString().toUpperCase();
-    var orderStatus = (data[i][25] || '').toString().toLowerCase();
+    var total = parseFloat(String(data[i][16]).replace(/[₹,]/g, '')) || 0;
+    var payStatus = (data[i][18] || '').toString().toUpperCase();
+    var payMethod = (data[i][17] || '').toString().toUpperCase();
+    var orderStatus = (data[i][21] || '').toString().toLowerCase();
 
     if (payStatus === 'PAID') {
       totalRevenue += total;

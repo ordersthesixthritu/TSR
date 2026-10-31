@@ -23,37 +23,9 @@ async function parseItems(itemsJson) {
   } catch { return []; }
 }
 
-function calculateGst(totalPaise, gstRate) {
-  const taxableAmount = Math.round(totalPaise / (1 + gstRate / 100));
-  const gstAmount = totalPaise - taxableAmount;
-  return { taxableAmount, gstAmount };
-}
-
 export async function generateInvoice(order) {
-  const gstin = process.env.GSTIN;
-  const gstRate = parseFloat(process.env.GST_RATE || '0');
-  const hsnCode = process.env.HSN_CODE || '3303';
-
-  if (!gstin || gstRate <= 0) {
-    console.log('Invoice: GST not configured — skipping invoice generation for', order.order_number);
-    return null;
-  }
-
   const invoiceNumber = await getNextInvoiceNumber();
   const items = await parseItems(order.items);
-  const { taxableAmount, gstAmount } = calculateGst(order.total, gstRate);
-
-  const sellerState = process.env.SELLER_STATE || 'Gujarat';
-  const buyerState = order.shipping_state || '';
-  const isIntraState = buyerState.toLowerCase() === sellerState.toLowerCase();
-
-  let cgst = 0, sgst = 0, igst = 0;
-  if (isIntraState) {
-    cgst = Math.round(gstAmount / 2);
-    sgst = gstAmount - cgst;
-  } else {
-    igst = gstAmount;
-  }
 
   const pdfBuffer = await new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: 'A4', margin: 50 });
@@ -70,7 +42,7 @@ export async function generateInvoice(order) {
     doc.fontSize(22).fillColor(gold).text('THE SIXTH RITU', 50, 50, { align: 'center' });
     doc.fontSize(9).fillColor(grey).text('The Season of Luxury', { align: 'center' });
     doc.moveDown(0.5);
-    doc.fontSize(14).fillColor(charcoal).text('TAX INVOICE', { align: 'center' });
+    doc.fontSize(14).fillColor(charcoal).text('INVOICE', { align: 'center' });
     doc.moveDown(1);
 
     const topY = doc.y;
@@ -83,8 +55,6 @@ export async function generateInvoice(order) {
     doc.text('Sold By:', 350, topY);
     doc.fillColor(charcoal).text(process.env.SELLER_NAME || 'The Sixth Ritu', 350);
     doc.fillColor(grey).text(process.env.SELLER_ADDRESS || '', 350, undefined, { width: 200 });
-    doc.text(`GSTIN: ${gstin}`, 350);
-    doc.text(`State: ${sellerState}`, 350);
     doc.moveDown(1.5);
 
     const buyerY = doc.y;
@@ -98,12 +68,11 @@ export async function generateInvoice(order) {
     doc.moveDown(1.5);
 
     const tableTop = doc.y;
-    const colX = { item: 50, hsn: 250, qty: 310, rate: 355, amount: 440 };
+    const colX = { item: 50, qty: 330, rate: 390, amount: 460 };
 
     doc.rect(50, tableTop, 500, 20).fill('#f0ece5');
     doc.fontSize(8).fillColor(charcoal);
     doc.text('Item', colX.item + 6, tableTop + 5);
-    doc.text('HSN', colX.hsn + 6, tableTop + 5);
     doc.text('Qty', colX.qty + 6, tableTop + 5);
     doc.text('Rate', colX.rate + 6, tableTop + 5);
     doc.text('Amount', colX.amount + 6, tableTop + 5);
@@ -112,8 +81,7 @@ export async function generateInvoice(order) {
     for (const item of items) {
       const lineTotal = item.price * item.qty;
       doc.fontSize(9).fillColor(charcoal);
-      doc.text(item.name, colX.item + 6, rowY, { width: 190 });
-      doc.text(hsnCode, colX.hsn + 6, rowY);
+      doc.text(item.name, colX.item + 6, rowY, { width: 270 });
       doc.text(String(item.qty), colX.qty + 6, rowY);
       doc.text(p(item.price), colX.rate + 6, rowY);
       doc.text(p(lineTotal), colX.amount + 6, rowY);
@@ -127,7 +95,7 @@ export async function generateInvoice(order) {
     const valX = 460;
 
     doc.fontSize(9).fillColor(grey);
-    doc.text('Subtotal (incl. GST)', labelX, rowY);
+    doc.text('Subtotal', labelX, rowY);
     doc.fillColor(charcoal).text(p(order.subtotal), valX, rowY, { align: 'right', width: 90 });
     rowY += 16;
 
@@ -137,24 +105,7 @@ export async function generateInvoice(order) {
       rowY += 16;
     }
 
-    doc.fillColor(grey).text('Taxable Amount', labelX, rowY);
-    doc.fillColor(charcoal).text(p(taxableAmount), valX, rowY, { align: 'right', width: 90 });
-    rowY += 16;
-
-    if (isIntraState) {
-      doc.fillColor(grey).text(`CGST (${gstRate / 2}%)`, labelX, rowY);
-      doc.fillColor(charcoal).text(p(cgst), valX, rowY, { align: 'right', width: 90 });
-      rowY += 16;
-      doc.fillColor(grey).text(`SGST (${gstRate / 2}%)`, labelX, rowY);
-      doc.fillColor(charcoal).text(p(sgst), valX, rowY, { align: 'right', width: 90 });
-      rowY += 16;
-    } else {
-      doc.fillColor(grey).text(`IGST (${gstRate}%)`, labelX, rowY);
-      doc.fillColor(charcoal).text(p(igst), valX, rowY, { align: 'right', width: 90 });
-      rowY += 16;
-    }
-
-    doc.fontSize(9).fillColor(grey).text('Shipping', labelX, rowY);
+    doc.fillColor(grey).text('Shipping', labelX, rowY);
     doc.fillColor(charcoal).text('Complimentary', valX, rowY, { align: 'right', width: 90 });
     rowY += 18;
 
@@ -162,6 +113,9 @@ export async function generateInvoice(order) {
     rowY += 6;
     doc.fontSize(11).fillColor(charcoal).text('Total', labelX, rowY);
     doc.text(p(order.total), valX, rowY, { align: 'right', width: 90 });
+    rowY += 18;
+
+    doc.fontSize(8).fillColor(grey).text('All prices are inclusive of applicable taxes.', labelX, rowY);
 
     doc.fontSize(8).fillColor(grey);
     doc.text('This is a computer-generated invoice. No signature required.', 50, 750, { align: 'center', width: 500 });
@@ -174,7 +128,7 @@ export async function generateInvoice(order) {
   await db.prepare(
     `INSERT INTO invoices (invoice_number, order_id, order_number, customer_name, customer_email, taxable_amount, cgst, sgst, igst, total_amount, pdf_data)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  ).run(invoiceNumber, order.id, order.order_number, order.customer_name, order.customer_email, taxableAmount, cgst, sgst, igst, order.total, pdfBase64);
+  ).run(invoiceNumber, order.id, order.order_number, order.customer_name, order.customer_email, 0, 0, 0, 0, order.total, pdfBase64);
 
   await db.prepare(
     "UPDATE orders SET invoice_number = ?, invoice_url = ?, updated_at = NOW() WHERE id = ?"

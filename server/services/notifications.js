@@ -243,7 +243,7 @@ export async function queueInvoiceEmail(order, pdfBuffer) {
     </div>
     <div style="padding:24px;">
       <p>Dear ${esc(order.customer_name)},</p>
-      <p>Please find attached your GST invoice for order <strong>${esc(order.order_number)}</strong>.</p>
+      <p>Please find attached your invoice for order <strong>${esc(order.order_number)}</strong>.</p>
       <p style="color:#6b6560;font-size:13px;margin-top:24px;">This is an automatically generated invoice. For questions, reach us at orders.thesixthritu@gmail.com</p>
     </div>
   </div>`;
