@@ -213,7 +213,7 @@ This is an OPTIONAL extra step. The Google Sheets integration from Step 3 is the
 ### When a customer pays online (Razorpay):
 1. Customer gets "Order Confirmed" email with items, total, address, "Prepaid (Online)"
 2. You get "New Order" notification email
-3. A **GST Tax Invoice PDF** is generated automatically
+3. An **Invoice PDF** is generated automatically
 4. Customer gets a second email with the invoice PDF attached
 5. Order is logged in Google Sheet
 
@@ -274,7 +274,7 @@ After completing Step 2 (email setup) and redeploying:
 
 - **Email confirmation to customer** — READY, just add SMTP settings
 - **Email notification to you** — READY, just add BUSINESS_EMAIL
-- **GST Invoice PDF generation + email** — READY, just add GST settings
+- **Invoice PDF generation + email** — READY, just add seller settings
 - **Google Sheets auto-sync** — READY, just add Google settings
 - **Google Apps Script (Code.gs)** — ALREADY WRITTEN at `google-apps-script/Code.gs`
 
