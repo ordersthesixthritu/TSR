@@ -1,6 +1,5 @@
 import app from './app.js';
 import { ensureInit } from './app.js';
-import { processEmailQueue } from './services/notifications.js';
 import path from 'path';
 import express from 'express';
 import { fileURLToPath } from 'url';
@@ -14,10 +13,6 @@ app.get('/admin/*', (_req, res) => res.sendFile(path.join(__dirname, '..', 'admi
 
 (async () => {
   await ensureInit();
-
-  setInterval(() => {
-    processEmailQueue().catch(err => console.error('Email queue error:', err.message));
-  }, 30_000);
 
   app.listen(PORT, () => console.log(`TSR server running on port ${PORT}`));
 })();

@@ -1,12 +1,17 @@
 // ============================================================================
-// THE SIXTH RITU — Google Apps Script Order Management
+// THE SIXTH RITU — Google Apps Script Order Management + Email Notifications
 // ============================================================================
-// This script manages order data in Google Sheets for The Sixth Ritu.
-// It provides a web endpoint (doPost) for the backend to sync orders,
-// sheet initialization, order management helpers, and scheduled reconciliation.
+// This script manages order data in Google Sheets AND sends all transactional
+// emails (customer confirmation, owner notification, invoice) for The Sixth Ritu.
 //
-// SETUP: Run initializeSheets() once from the Script Editor to create all tabs.
-//        Set AUTH_TOKEN in Script Properties (File > Project properties > Script properties).
+// NO SMTP NEEDED — emails are sent via GmailApp using the account that owns
+// this script. Make sure this script is created from orders.thesixthritu@gmail.com
+//
+// SETUP:
+//   1. Run initializeSheets() once from the Script Editor
+//   2. Set AUTH_TOKEN in Script Properties (Project Settings > Script Properties)
+//   3. Deploy as Web App (Execute as: Me, Access: Anyone)
+//   4. Add the Web App URL + AUTH_TOKEN as env vars in Vercel
 // ============================================================================
 
 // ---------------------------------------------------------------------------
@@ -55,8 +60,9 @@ var SETTINGS_HEADERS = ['Setting', 'Value'];
 
 var DEFAULT_SETTINGS = [
   ['Business Name', 'The Sixth Ritu'],
-  ['Business Email', ''],
+  ['Business Email', 'orders.thesixthritu@gmail.com'],
   ['Business Registration', '24AJWPG1884D1Z2'],
+  ['Business Address', ''],
   ['Shipping Rate', '0'],
   ['COD Enabled', 'true'],
   ['Currency', 'INR']
@@ -85,6 +91,9 @@ function doPost(e) {
 
     var result;
     switch (action) {
+      case 'newOrder':
+        result = processNewOrder(data);
+        break;
       case 'addOrder':
         result = addOrderToSheet(data);
         break;
@@ -116,13 +125,297 @@ function doPost(e) {
 }
 
 function doGet() {
-  return jsonResponse({ status: 'ok', service: 'The Sixth Ritu Order Sync' });
+  return jsonResponse({ status: 'ok', service: 'The Sixth Ritu Order Sync + Email' });
 }
 
 function jsonResponse(obj, code) {
   return ContentService
     .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ---------------------------------------------------------------------------
+// NEW ORDER PROCESSING (Sheet + All Emails)
+// ---------------------------------------------------------------------------
+
+function processNewOrder(data) {
+  var results = { sheet: null, customerEmail: null, ownerEmail: null, invoiceEmail: null };
+
+  // 1. Log order in Google Sheet
+  try {
+    results.sheet = addOrderToSheet(data);
+  } catch (err) {
+    results.sheet = { error: err.message };
+    logFailedAutomation({ jobType: 'sheet_sync', orderId: data.orderNumber, error: err.message });
+  }
+
+  // 2. Send customer confirmation email
+  try {
+    results.customerEmail = sendCustomerConfirmation(data);
+  } catch (err) {
+    results.customerEmail = { error: err.message };
+    logFailedAutomation({ jobType: 'customer_email', orderId: data.orderNumber, error: err.message });
+  }
+
+  // 3. Send owner notification email
+  try {
+    results.ownerEmail = sendOwnerNotification(data);
+  } catch (err) {
+    results.ownerEmail = { error: err.message };
+    logFailedAutomation({ jobType: 'owner_email', orderId: data.orderNumber, error: err.message });
+  }
+
+  // 4. For paid orders: send invoice email + log invoice
+  if (data.paymentStatus && data.paymentStatus.toUpperCase() === 'PAID' && data.invoiceNumber) {
+    try {
+      results.invoiceEmail = sendInvoiceEmail(data);
+    } catch (err) {
+      results.invoiceEmail = { error: err.message };
+      logFailedAutomation({ jobType: 'invoice_email', orderId: data.orderNumber, error: err.message });
+    }
+
+    try {
+      addInvoiceRecord({
+        invoiceNumber: data.invoiceNumber,
+        orderId: data.orderNumber,
+        customer: data.customerName,
+        invoiceTotal: data.finalTotal,
+        pdfLink: data.invoiceLink || '',
+        emailStatus: results.invoiceEmail && !results.invoiceEmail.error ? 'sent' : 'failed'
+      });
+    } catch (err) {
+      logFailedAutomation({ jobType: 'invoice_record', orderId: data.orderNumber, error: err.message });
+    }
+  }
+
+  return results;
+}
+
+// ---------------------------------------------------------------------------
+// EMAIL: CUSTOMER ORDER CONFIRMATION
+// ---------------------------------------------------------------------------
+
+function sendCustomerConfirmation(data) {
+  var email = (data.email || '').trim();
+  if (!email) return { skipped: true, reason: 'no email' };
+
+  var items = data.items || [];
+  var paymentLabel = (data.paymentMethod || '').toLowerCase() === 'cod' ? 'Cash on Delivery' : 'Prepaid (Online)';
+  var isCod = (data.paymentMethod || '').toLowerCase() === 'cod';
+
+  var itemRows = '';
+  for (var i = 0; i < items.length; i++) {
+    var item = items[i];
+    var lineTotal = (item.price || 0) * (item.qty || 1) / 100;
+    itemRows += '<tr>'
+      + '<td style="padding:10px 16px;border-bottom:1px solid #e8e4dd;">' + esc(item.name) + '</td>'
+      + '<td style="padding:10px 16px;border-bottom:1px solid #e8e4dd;text-align:center;">' + (item.qty || 1) + '</td>'
+      + '<td style="padding:10px 16px;border-bottom:1px solid #e8e4dd;text-align:right;">' + formatRupees(lineTotal) + '</td>'
+      + '</tr>';
+  }
+
+  var discountRow = '';
+  if (data.discount && data.discount > 0) {
+    discountRow = '<tr><td style="padding:4px 0;color:#6b6560;">Discount'
+      + (data.couponCode ? ' (' + esc(data.couponCode) + ')' : '') + '</td>'
+      + '<td style="text-align:right;color:#a27d4e;">-' + formatRupees(data.discount) + '</td></tr>';
+  }
+
+  var html = ''
+    + '<div style="max-width:600px;margin:0 auto;font-family:\'DM Sans\',Helvetica,Arial,sans-serif;color:#1a1815;background:#faf8f4;">'
+    + '  <div style="background:#1a1815;padding:32px;text-align:center;">'
+    + '    <h1 style="color:#a27d4e;font-family:\'Cormorant Garamond\',Georgia,serif;font-size:28px;margin:0;letter-spacing:2px;">THE SIXTH RITU</h1>'
+    + '  </div>'
+    + '  <div style="padding:32px;">'
+    + '    <h2 style="font-family:\'Cormorant Garamond\',Georgia,serif;font-size:24px;color:#1a1815;margin:0 0 8px;">Thank you for your order</h2>'
+    + '    <p style="color:#6b6560;margin:0 0 24px;">Order <strong>' + esc(data.orderNumber) + '</strong> has been ' + (isCod ? 'placed' : 'confirmed') + '.</p>'
+    + '    <table style="width:100%;border-collapse:collapse;margin:0 0 24px;">'
+    + '      <thead><tr style="background:#f0ece5;">'
+    + '        <th style="padding:10px 16px;text-align:left;font-size:13px;text-transform:uppercase;letter-spacing:1px;color:#6b6560;">Item</th>'
+    + '        <th style="padding:10px 16px;text-align:center;font-size:13px;text-transform:uppercase;letter-spacing:1px;color:#6b6560;">Qty</th>'
+    + '        <th style="padding:10px 16px;text-align:right;font-size:13px;text-transform:uppercase;letter-spacing:1px;color:#6b6560;">Amount</th>'
+    + '      </tr></thead>'
+    + '      <tbody>' + itemRows + '</tbody>'
+    + '    </table>'
+    + '    <table style="width:100%;max-width:280px;margin-left:auto;margin-bottom:24px;">'
+    + '      <tr><td style="padding:4px 0;color:#6b6560;">Subtotal</td><td style="text-align:right;">' + formatRupees(data.itemSubtotal) + '</td></tr>'
+    + discountRow
+    + '      <tr><td style="padding:4px 0;color:#6b6560;">Shipping</td><td style="text-align:right;">Complimentary</td></tr>'
+    + '      <tr style="font-weight:700;font-size:16px;"><td style="padding:8px 0;border-top:2px solid #1a1815;">Total</td><td style="text-align:right;padding:8px 0;border-top:2px solid #1a1815;">' + formatRupees(data.finalTotal) + '</td></tr>'
+    + '      <tr><td colspan="2" style="padding:4px 0;color:#999;font-size:11px;text-align:right;">Inclusive of all applicable taxes</td></tr>'
+    + '    </table>'
+    + '    <div style="background:#f0ece5;padding:20px;border-radius:4px;margin:0 0 24px;">'
+    + '      <p style="margin:0 0 8px;font-weight:600;">Shipping Details</p>'
+    + '      <p style="margin:0;color:#6b6560;line-height:1.6;">'
+    + esc(data.customerName) + '<br>'
+    + esc(data.shippingAddress) + '<br>'
+    + esc(data.city) + ', ' + esc(data.state) + ' — ' + esc(data.pincode) + '<br>'
+    + 'Phone: ' + esc(data.mobile)
+    + '      </p>'
+    + '    </div>'
+    + '    <p style="margin:0 0 4px;"><strong>Payment:</strong> ' + paymentLabel + '</p>'
+    + (isCod ? '<p style="color:#6b6560;margin:0;font-size:13px;">Payment will be collected at delivery.</p>' : '')
+    + '    <hr style="border:none;border-top:1px solid #e8e4dd;margin:24px 0;">'
+    + '    <p style="color:#6b6560;font-size:13px;margin:0;">If you have any questions, reply to this email or reach us at orders.thesixthritu@gmail.com</p>'
+    + '  </div>'
+    + '  <div style="background:#1a1815;padding:20px;text-align:center;">'
+    + '    <p style="color:#a27d4e;font-size:12px;margin:0;letter-spacing:1px;">THE SIXTH RITU — THE SEASON OF LUXURY</p>'
+    + '  </div>'
+    + '</div>';
+
+  GmailApp.sendEmail(email,
+    'Order Confirmed — ' + data.orderNumber + ' | The Sixth Ritu',
+    'Thank you for your order ' + data.orderNumber + '. Total: ' + formatRupees(data.finalTotal),
+    { htmlBody: html, name: 'The Sixth Ritu' }
+  );
+
+  return { sent: true, to: email };
+}
+
+// ---------------------------------------------------------------------------
+// EMAIL: OWNER NOTIFICATION
+// ---------------------------------------------------------------------------
+
+function sendOwnerNotification(data) {
+  var ownerEmail = getSettingValue('Business Email');
+  if (!ownerEmail) ownerEmail = Session.getActiveUser().getEmail();
+  if (!ownerEmail) return { skipped: true, reason: 'no owner email' };
+
+  var items = data.items || [];
+  var itemList = '';
+  for (var i = 0; i < items.length; i++) {
+    itemList += items[i].name + ' × ' + (items[i].qty || 1);
+    if (i < items.length - 1) itemList += ', ';
+  }
+
+  var paymentLabel = (data.paymentMethod || '').toLowerCase() === 'cod' ? 'COD' : 'Prepaid';
+  var paymentBadge = data.paymentStatus && data.paymentStatus.toUpperCase() === 'PAID'
+    ? ' ✓ Paid' : ' — Pending';
+
+  var html = ''
+    + '<div style="font-family:\'DM Sans\',Helvetica,Arial,sans-serif;max-width:600px;margin:0 auto;color:#1a1815;">'
+    + '  <h2 style="color:#a27d4e;">New Order — ' + esc(data.orderNumber) + '</h2>'
+    + '  <table style="width:100%;border-collapse:collapse;">'
+    + '    <tr><td style="padding:6px 0;font-weight:600;width:120px;">Customer</td><td>' + esc(data.customerName) + '</td></tr>'
+    + '    <tr><td style="padding:6px 0;font-weight:600;">Email</td><td>' + esc(data.email) + '</td></tr>'
+    + '    <tr><td style="padding:6px 0;font-weight:600;">Phone</td><td>' + esc(data.mobile) + '</td></tr>'
+    + '    <tr><td style="padding:6px 0;font-weight:600;">Items</td><td>' + esc(itemList) + '</td></tr>'
+    + '    <tr><td style="padding:6px 0;font-weight:600;">Total</td><td>' + formatRupees(data.finalTotal) + '</td></tr>'
+    + '    <tr><td style="padding:6px 0;font-weight:600;">Payment</td><td>' + paymentLabel + paymentBadge + '</td></tr>'
+    + '    <tr><td style="padding:6px 0;font-weight:600;">Address</td><td>' + esc(data.shippingAddress) + ', ' + esc(data.city) + ', ' + esc(data.state) + ' — ' + esc(data.pincode) + '</td></tr>'
+    + '  </table>'
+    + '</div>';
+
+  GmailApp.sendEmail(ownerEmail,
+    '[TSR] New Order ' + data.orderNumber + ' — ' + formatRupees(data.finalTotal) + ' (' + paymentLabel + ')',
+    'New order ' + data.orderNumber + ' from ' + data.customerName + '. Total: ' + formatRupees(data.finalTotal),
+    { htmlBody: html, name: 'The Sixth Ritu Orders' }
+  );
+
+  return { sent: true, to: ownerEmail };
+}
+
+// ---------------------------------------------------------------------------
+// EMAIL: INVOICE (beautifully formatted HTML invoice)
+// ---------------------------------------------------------------------------
+
+function sendInvoiceEmail(data) {
+  var email = (data.email || '').trim();
+  if (!email) return { skipped: true, reason: 'no email' };
+  if (!data.invoiceNumber) return { skipped: true, reason: 'no invoice number' };
+
+  var sellerName = getSettingValue('Business Name') || 'The Sixth Ritu';
+  var sellerAddress = getSettingValue('Business Address') || '';
+  var invoiceDate = Utilities.formatDate(new Date(), 'Asia/Kolkata', 'dd MMM yyyy');
+
+  var items = data.items || [];
+  var itemRows = '';
+  for (var i = 0; i < items.length; i++) {
+    var item = items[i];
+    var rate = (item.price || 0) / 100;
+    var lineTotal = rate * (item.qty || 1);
+    itemRows += '<tr>'
+      + '<td style="padding:8px 12px;border-bottom:1px solid #e8e4dd;">' + esc(item.name) + '</td>'
+      + '<td style="padding:8px 12px;border-bottom:1px solid #e8e4dd;text-align:center;">' + (item.qty || 1) + '</td>'
+      + '<td style="padding:8px 12px;border-bottom:1px solid #e8e4dd;text-align:right;">' + formatRupees(rate) + '</td>'
+      + '<td style="padding:8px 12px;border-bottom:1px solid #e8e4dd;text-align:right;">' + formatRupees(lineTotal) + '</td>'
+      + '</tr>';
+  }
+
+  var discountRow = '';
+  if (data.discount && data.discount > 0) {
+    discountRow = '<tr><td style="padding:4px 0;color:#6b6560;">Discount</td>'
+      + '<td style="text-align:right;color:#a27d4e;">-' + formatRupees(data.discount) + '</td></tr>';
+  }
+
+  var html = ''
+    + '<div style="max-width:650px;margin:0 auto;font-family:\'DM Sans\',Helvetica,Arial,sans-serif;color:#1a1815;background:#ffffff;">'
+    // Header
+    + '<div style="padding:32px 32px 16px;text-align:center;border-bottom:3px solid #a27d4e;">'
+    + '  <h1 style="color:#a27d4e;font-family:\'Cormorant Garamond\',Georgia,serif;font-size:26px;margin:0;letter-spacing:2px;">THE SIXTH RITU</h1>'
+    + '  <p style="color:#6b6560;font-size:10px;margin:4px 0 0;letter-spacing:1px;">THE SEASON OF LUXURY</p>'
+    + '</div>'
+    // Invoice title
+    + '<div style="padding:24px 32px 0;">'
+    + '  <h2 style="font-family:\'Cormorant Garamond\',Georgia,serif;font-size:20px;color:#1a1815;margin:0 0 20px;text-align:center;letter-spacing:3px;">INVOICE</h2>'
+    + '  <table style="width:100%;margin:0 0 20px;">'
+    + '    <tr><td style="vertical-align:top;width:50%;">'
+    + '      <p style="color:#6b6560;font-size:10px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Invoice No</p>'
+    + '      <p style="margin:0 0 12px;font-weight:600;">' + esc(data.invoiceNumber) + '</p>'
+    + '      <p style="color:#6b6560;font-size:10px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Date</p>'
+    + '      <p style="margin:0 0 12px;">' + invoiceDate + '</p>'
+    + '      <p style="color:#6b6560;font-size:10px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Order No</p>'
+    + '      <p style="margin:0;">' + esc(data.orderNumber) + '</p>'
+    + '    </td><td style="vertical-align:top;width:50%;text-align:right;">'
+    + '      <p style="color:#6b6560;font-size:10px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Sold By</p>'
+    + '      <p style="margin:0;font-weight:600;">' + esc(sellerName) + '</p>'
+    + (sellerAddress ? '<p style="margin:4px 0 0;color:#6b6560;font-size:12px;">' + esc(sellerAddress) + '</p>' : '')
+    + '    </td></tr>'
+    + '  </table>'
+    // Bill To
+    + '  <div style="background:#f7f4ed;padding:14px 16px;border-radius:4px;margin:0 0 20px;">'
+    + '    <p style="color:#6b6560;font-size:10px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Bill To / Ship To</p>'
+    + '    <p style="margin:0;font-weight:600;">' + esc(data.customerName) + '</p>'
+    + '    <p style="margin:4px 0 0;color:#6b6560;font-size:12px;line-height:1.6;">'
+    + esc(data.shippingAddress) + '<br>'
+    + esc(data.city) + ', ' + esc(data.state) + ' — ' + esc(data.pincode) + '<br>'
+    + 'Phone: ' + esc(data.mobile)
+    + (data.email ? '<br>Email: ' + esc(data.email) : '')
+    + '    </p>'
+    + '  </div>'
+    // Items table
+    + '  <table style="width:100%;border-collapse:collapse;margin:0 0 16px;">'
+    + '    <thead><tr style="background:#f0ece5;">'
+    + '      <th style="padding:8px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#6b6560;">Item</th>'
+    + '      <th style="padding:8px 12px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#6b6560;">Qty</th>'
+    + '      <th style="padding:8px 12px;text-align:right;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#6b6560;">Rate</th>'
+    + '      <th style="padding:8px 12px;text-align:right;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#6b6560;">Amount</th>'
+    + '    </tr></thead>'
+    + '    <tbody>' + itemRows + '</tbody>'
+    + '  </table>'
+    // Totals
+    + '  <table style="width:100%;max-width:260px;margin-left:auto;margin-bottom:16px;">'
+    + '    <tr><td style="padding:4px 0;color:#6b6560;">Subtotal</td><td style="text-align:right;">' + formatRupees(data.itemSubtotal) + '</td></tr>'
+    + discountRow
+    + '    <tr><td style="padding:4px 0;color:#6b6560;">Shipping</td><td style="text-align:right;">Complimentary</td></tr>'
+    + '    <tr style="font-weight:700;font-size:15px;"><td style="padding:8px 0;border-top:2px solid #1a1815;">Total</td><td style="text-align:right;padding:8px 0;border-top:2px solid #1a1815;">' + formatRupees(data.finalTotal) + '</td></tr>'
+    + '    <tr><td colspan="2" style="padding:4px 0;color:#999;font-size:10px;text-align:right;">All prices are inclusive of applicable taxes</td></tr>'
+    + '  </table>'
+    + '  <p style="color:#999;font-size:10px;text-align:center;margin:20px 0 0;padding-top:16px;border-top:1px solid #e8e4dd;">This is a computer-generated invoice. No signature required.</p>'
+    + '</div>'
+    // Footer
+    + '<div style="background:#1a1815;padding:16px;text-align:center;margin-top:24px;">'
+    + '  <p style="color:#a27d4e;font-size:11px;margin:0;letter-spacing:1px;">THE SIXTH RITU — THE SEASON OF LUXURY</p>'
+    + '</div>'
+    + '</div>';
+
+  GmailApp.sendEmail(email,
+    'Invoice — ' + data.orderNumber + ' | The Sixth Ritu',
+    'Your invoice ' + data.invoiceNumber + ' for order ' + data.orderNumber + '. Total: ' + formatRupees(data.finalTotal),
+    { htmlBody: html, name: 'The Sixth Ritu' }
+  );
+
+  return { sent: true, to: email, invoiceNumber: data.invoiceNumber };
 }
 
 // ---------------------------------------------------------------------------
@@ -145,7 +438,6 @@ function initializeSheets() {
 
   applyConditionalFormatting(ss);
 
-  // Remove the default "Sheet1" if it exists and is empty
   var defaultSheet = ss.getSheetByName('Sheet1');
   if (defaultSheet && ss.getSheets().length > 1) {
     var lastRow = defaultSheet.getLastRow();
@@ -173,7 +465,6 @@ function createSheetWithHeaders(ss, name, headers) {
 
   sheet.setFrozenRows(1);
 
-  // Auto-resize columns (up to 20 to stay within limits)
   var colCount = Math.min(headers.length, 20);
   for (var i = 1; i <= colCount; i++) {
     sheet.autoResizeColumn(i);
@@ -186,7 +477,6 @@ function applyConditionalFormatting(ss) {
   var ordersSheet = ss.getSheetByName(SHEET_NAMES.ORDERS);
   if (!ordersSheet) return;
 
-  // Payment Status column (S = col 19)
   var paymentCol = 19;
   var lastRow = Math.max(ordersSheet.getMaxRows(), 500);
   var range = ordersSheet.getRange(2, paymentCol, lastRow - 1, 1);
@@ -221,7 +511,6 @@ function applyConditionalFormatting(ss) {
     .setRanges([range])
     .build());
 
-  // Order Status column (V = col 22)
   var statusCol = 22;
   var statusRange = ordersSheet.getRange(2, statusCol, lastRow - 1, 1);
 
@@ -258,7 +547,6 @@ function addOrderToSheet(orderData) {
   var ordersSheet = ss.getSheetByName(SHEET_NAMES.ORDERS);
   if (!ordersSheet) throw new Error('Orders sheet not found. Run initializeSheets() first.');
 
-  // Duplicate check
   var existingRow = findOrderRow(ordersSheet, orderData.orderNumber);
   if (existingRow > 0) {
     return { action: 'skipped', reason: 'duplicate', orderNumber: orderData.orderNumber };
@@ -300,10 +588,8 @@ function addOrderToSheet(orderData) {
 
   ordersSheet.appendRow(row);
 
-  // Update Customers sheet
   updateCustomerRecord(ss, orderData);
 
-  // Add Payments record
   addPaymentRecord(ss, {
     orderId: orderData.orderNumber,
     paymentId: orderData.razorpayPaymentId || '',
@@ -332,14 +618,13 @@ function updateOrderStatus(orderNumber, status, paymentStatus) {
   var now = Utilities.formatDate(new Date(), 'Asia/Kolkata', 'dd/MM/yyyy HH:mm:ss');
 
   if (status) {
-    ordersSheet.getRange(row, 22).setValue(status); // Order Status
+    ordersSheet.getRange(row, 22).setValue(status);
   }
   if (paymentStatus) {
-    ordersSheet.getRange(row, 19).setValue(paymentStatus.toUpperCase()); // Payment Status
+    ordersSheet.getRange(row, 19).setValue(paymentStatus.toUpperCase());
   }
-  ordersSheet.getRange(row, 27).setValue(now); // Last Updated
+  ordersSheet.getRange(row, 27).setValue(now);
 
-  // Update payment sheet too
   if (paymentStatus) {
     updatePaymentStatus(ss, orderNumber, paymentStatus);
   }
@@ -391,7 +676,7 @@ function updateCustomerRecord(ss, orderData) {
 
   for (var i = 1; i < data.length; i++) {
     if ((data[i][1] || '').toString().toLowerCase().trim() === email) {
-      existingRow = i + 1; // 1-indexed
+      existingRow = i + 1;
       break;
     }
   }
@@ -399,7 +684,6 @@ function updateCustomerRecord(ss, orderData) {
   var now = Utilities.formatDate(new Date(), 'Asia/Kolkata', 'dd/MM/yyyy');
 
   if (existingRow > 0) {
-    // Update existing customer
     var currentOrders = parseInt(sheet.getRange(existingRow, 7).getValue()) || 0;
     var currentSpent = parseFloat(String(sheet.getRange(existingRow, 8).getValue()).replace(/[₹,]/g, '')) || 0;
 
@@ -410,7 +694,6 @@ function updateCustomerRecord(ss, orderData) {
     sheet.getRange(existingRow, 7).setValue(currentOrders + 1);
     sheet.getRange(existingRow, 8).setValue(formatCurrency(currentSpent + (orderData.finalTotal || 0)));
   } else {
-    // New customer
     sheet.appendRow([
       orderData.customerName || '',
       email,
@@ -470,7 +753,6 @@ function addInvoiceRecord(data) {
   var sheet = ss.getSheetByName(SHEET_NAMES.INVOICES);
   if (!sheet) throw new Error('Invoices sheet not found.');
 
-  // Duplicate check
   var existing = sheet.getDataRange().getValues();
   for (var i = 1; i < existing.length; i++) {
     if (existing[i][0] === data.invoiceNumber) {
@@ -488,7 +770,6 @@ function addInvoiceRecord(data) {
     data.emailStatus || 'pending'
   ]);
 
-  // Update invoice fields on the Orders sheet too
   if (data.orderId) {
     var ordersSheet = ss.getSheetByName(SHEET_NAMES.ORDERS);
     var row = findOrderRow(ordersSheet, data.orderId);
@@ -506,22 +787,27 @@ function addInvoiceRecord(data) {
 // ---------------------------------------------------------------------------
 
 function logFailedAutomation(data) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName(SHEET_NAMES.FAILED);
-  if (!sheet) return { action: 'no_sheet' };
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName(SHEET_NAMES.FAILED);
+    if (!sheet) return { action: 'no_sheet' };
 
-  var now = Utilities.formatDate(new Date(), 'Asia/Kolkata', 'dd/MM/yyyy HH:mm:ss');
+    var now = Utilities.formatDate(new Date(), 'Asia/Kolkata', 'dd/MM/yyyy HH:mm:ss');
 
-  sheet.appendRow([
-    now,
-    data.jobType || 'unknown',
-    data.orderId || '',
-    data.error || '',
-    data.retryCount || 0,
-    'No'
-  ]);
+    sheet.appendRow([
+      now,
+      data.jobType || 'unknown',
+      data.orderId || '',
+      data.error || '',
+      data.retryCount || 0,
+      'No'
+    ]);
 
-  return { action: 'logged' };
+    return { action: 'logged' };
+  } catch (e) {
+    Logger.log('Failed to log automation error: ' + e.message);
+    return { action: 'log_failed' };
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -549,7 +835,7 @@ function findOrderRow(sheet, orderNumber) {
   var data = sheet.getRange(1, 1, sheet.getLastRow(), 1).getValues();
   for (var i = 1; i < data.length; i++) {
     if (data[i][0] === orderNumber) {
-      return i + 1; // 1-indexed
+      return i + 1;
     }
   }
   return -1;
@@ -567,12 +853,11 @@ function onEdit(e) {
 
   var col = e.range.getColumn();
   var row = e.range.getRow();
-  if (row <= 1) return; // header row
+  if (row <= 1) return;
 
-  // Order Status column = 22, Payment Status column = 19
   if (col === 22 || col === 19) {
     var now = Utilities.formatDate(new Date(), 'Asia/Kolkata', 'dd/MM/yyyy HH:mm:ss');
-    sheet.getRange(row, 27).setValue(now); // Last Updated
+    sheet.getRange(row, 27).setValue(now);
   }
 }
 
@@ -594,7 +879,6 @@ function reconcileOrders() {
   var paymentsData = paymentsSheet.getDataRange().getValues();
   var issues = [];
 
-  // Build a map of payment statuses from Payments sheet
   var paymentMap = {};
   for (var p = 1; p < paymentsData.length; p++) {
     paymentMap[paymentsData[p][0]] = {
@@ -609,23 +893,19 @@ function reconcileOrders() {
     var paymentStatus = (ordersData[i][18] || '').toString().toUpperCase();
     var orderStatus = (ordersData[i][21] || '').toString().toLowerCase();
 
-    // Check: paid order should not be "pending"
     if (paymentStatus === 'PAID' && orderStatus === 'pending') {
       issues.push('Order ' + orderNumber + ': paid but still pending status');
     }
 
-    // Check: prepaid confirmed order should have payment ID
     if (paymentMethod === 'PREPAID' && paymentStatus === 'PAID' && !ordersData[i][20]) {
       issues.push('Order ' + orderNumber + ': prepaid+paid but missing Razorpay Payment ID');
     }
 
-    // Check: payment sheet mismatch
     var payRecord = paymentMap[orderNumber];
     if (payRecord && payRecord.status !== paymentStatus) {
       issues.push('Order ' + orderNumber + ': Orders sheet says ' + paymentStatus + ', Payments sheet says ' + payRecord.status);
     }
 
-    // Check: missing from Payments sheet
     if (!payRecord) {
       issues.push('Order ' + orderNumber + ': exists in Orders but missing from Payments sheet');
     }
@@ -652,7 +932,11 @@ function reconcileOrders() {
 // UTILITIES
 // ---------------------------------------------------------------------------
 
-function formatCurrency(amount) {
+function esc(str) {
+  return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function formatRupees(amount) {
   if (typeof amount === 'string') {
     amount = parseFloat(amount.replace(/[₹,]/g, '')) || 0;
   }
@@ -661,6 +945,28 @@ function formatCurrency(amount) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   });
+}
+
+function formatCurrency(amount) {
+  return formatRupees(amount);
+}
+
+function getSettingValue(settingName) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName(SHEET_NAMES.SETTINGS);
+    if (!sheet) return '';
+
+    var data = sheet.getDataRange().getValues();
+    for (var i = 1; i < data.length; i++) {
+      if (data[i][0] === settingName) {
+        return (data[i][1] || '').toString().trim();
+      }
+    }
+    return '';
+  } catch (e) {
+    return '';
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -673,7 +979,34 @@ function onOpen() {
     .addItem('Initialize Sheets', 'initializeSheets')
     .addItem('Run Reconciliation', 'reconcileOrders')
     .addItem('View Dashboard', 'showDashboard')
+    .addItem('Send Test Email', 'sendTestEmail')
     .addToUi();
+}
+
+function sendTestEmail() {
+  var email = Session.getActiveUser().getEmail();
+  if (!email) {
+    SpreadsheetApp.getUi().alert('Could not determine your email.');
+    return;
+  }
+
+  try {
+    GmailApp.sendEmail(email,
+      'Test Email — The Sixth Ritu',
+      'This is a test email from The Sixth Ritu order system.',
+      {
+        htmlBody: '<div style="font-family:sans-serif;max-width:400px;margin:0 auto;padding:24px;">'
+          + '<h2 style="color:#a27d4e;">The Sixth Ritu</h2>'
+          + '<p>Email system is working correctly!</p>'
+          + '<p style="color:#6b6560;font-size:12px;">This is a test email sent from Google Apps Script.</p>'
+          + '</div>',
+        name: 'The Sixth Ritu'
+      }
+    );
+    SpreadsheetApp.getUi().alert('Test email sent to ' + email + '!\n\nCheck your inbox (and spam folder).');
+  } catch (e) {
+    SpreadsheetApp.getUi().alert('Error sending test email: ' + e.message);
+  }
 }
 
 function showDashboard() {
@@ -707,12 +1040,12 @@ function showDashboard() {
     if (orderStatus === 'pending') pendingOrders++;
   }
 
-  var msg = '📊 The Sixth Ritu — Order Dashboard\n\n'
+  var msg = 'The Sixth Ritu — Order Dashboard\n\n'
     + 'Total Orders: ' + totalOrders + '\n'
     + 'Paid Orders: ' + paidOrders + '\n'
     + 'Pending Orders: ' + pendingOrders + '\n'
     + 'Prepaid: ' + prepaidOrders + ' | COD: ' + codOrders + '\n'
-    + 'Total Revenue (Paid): ₹' + totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 }) + '\n';
+    + 'Total Revenue (Paid): ' + formatRupees(totalRevenue) + '\n';
 
   SpreadsheetApp.getUi().alert(msg);
 }

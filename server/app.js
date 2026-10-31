@@ -13,8 +13,7 @@ import { initDatabase } from './db/schema.js';
 import paymentRoutes from './routes/payments.js';
 import adminRoutes from './routes/admin.js';
 import publicRoutes from './routes/public.js';
-import { initEmail, processEmailQueue } from './services/notifications.js';
-import { initSheets, ensureSheetHeaders } from './services/sheets.js';
+import { processEmailQueue } from './services/notifications.js';
 
 const app = express();
 
@@ -25,9 +24,6 @@ export async function ensureInit() {
       const t0 = Date.now();
       await initDatabase();
       console.log(`Init: database ready (${Date.now() - t0}ms)`);
-      initEmail();
-      initSheets();
-      ensureSheetHeaders().catch(err => console.error('Sheets header check failed:', err.message));
       console.log(`Init: complete (${Date.now() - t0}ms)`);
     })().catch(err => {
       _initPromise = null;

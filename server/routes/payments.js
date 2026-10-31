@@ -2,8 +2,7 @@ import { Router } from 'express';
 import crypto from 'crypto';
 import Razorpay from 'razorpay';
 import db from '../db/index.js';
-import { queueOrderConfirmation, queueOwnerNotification, queueInvoiceEmail, processEmailQueue } from '../services/notifications.js';
-import { syncOrderToSheet, updateOrderInSheet } from '../services/sheets.js';
+import { updateOrderInSheet } from '../services/sheets.js';
 import { generateInvoice } from '../services/invoice.js';
 
 const router = Router();
@@ -367,6 +366,76 @@ router.get('/invoice/:orderNumber', async (req, res) => {
 
 const _postOrderProcessed = new Set();
 
+async function resolveItems(order) {
+  try {
+    const items = JSON.parse(order.items);
+    const resolved = [];
+    for (const i of items) {
+      const product = await db.prepare('SELECT name, price FROM products WHERE slug = ?').get(i.slug);
+      resolved.push({ name: product?.name || i.slug, slug: i.slug, qty: i.qty, price: product?.price || 0 });
+    }
+    return resolved;
+  } catch { return []; }
+}
+
+async function notifyAppsScript(order, invoiceNumber) {
+  const url = process.env.GOOGLE_APPS_SCRIPT_URL;
+  const token = process.env.GOOGLE_APPS_SCRIPT_TOKEN;
+  if (!url || !token) {
+    console.log('Apps Script: not configured — skipping notification for', order.order_number);
+    return;
+  }
+
+  const items = await resolveItems(order);
+
+  const payload = {
+    auth_token: token,
+    action: 'newOrder',
+    data: {
+      orderNumber: order.order_number,
+      customerName: order.customer_name,
+      email: order.customer_email,
+      mobile: order.customer_phone,
+      shippingAddress: order.shipping_address,
+      city: order.shipping_city,
+      state: order.shipping_state,
+      pincode: order.shipping_pincode,
+      items,
+      productNames: items.map(i => `${i.name} × ${i.qty}`).join(', '),
+      sku: items.map(i => i.slug).join(', '),
+      quantity: items.reduce((s, i) => s + i.qty, 0),
+      itemSubtotal: order.subtotal / 100,
+      discount: order.discount / 100,
+      shippingCharges: 0,
+      finalTotal: order.total / 100,
+      paymentMethod: order.payment_method,
+      paymentStatus: order.payment_status === 'paid' ? 'PAID' : 'UNPAID',
+      razorpayOrderId: order.razorpay_order_id || '',
+      razorpayPaymentId: order.razorpay_payment_id || '',
+      orderStatus: order.status || 'confirmed',
+      invoiceNumber: invoiceNumber || '',
+      invoiceLink: invoiceNumber ? `/api/payments/invoice/${order.order_number}` : '',
+      couponCode: order.coupon_used || '',
+    },
+  };
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(30000),
+    });
+    const result = await response.json();
+    console.log(`Apps Script: ${order.order_number} →`, JSON.stringify(result));
+  } catch (err) {
+    console.error(`Apps Script: failed for ${order.order_number} —`, err.message);
+    await db.prepare(
+      "INSERT INTO failed_jobs (job_type, order_id, error, payload) VALUES (?, ?, ?, ?)"
+    ).run('apps_script', order.id, err.message, JSON.stringify({ order_number: order.order_number }));
+  }
+}
+
 function handlePostOrder(order) {
   if (!order) return;
   if (_postOrderProcessed.has(order.order_number)) return;
@@ -380,17 +449,17 @@ function handlePostOrder(order) {
         return;
       }
 
-      await queueOrderConfirmation(order);
-      await queueOwnerNotification(order);
-
+      let invoiceNumber = null;
       if (order.payment_status === 'paid') {
-        const result = await generateInvoice(order);
-        if (result) {
-          await queueInvoiceEmail(order, result.pdfBuffer);
+        try {
+          const result = await generateInvoice(order);
+          invoiceNumber = result?.invoiceNumber;
+        } catch (err) {
+          console.error('invoice generation error:', err.message);
         }
       }
 
-      await syncOrderToSheet(order);
+      await notifyAppsScript(order, invoiceNumber);
     } catch (err) {
       console.error('post-order automation error:', err);
       try {
