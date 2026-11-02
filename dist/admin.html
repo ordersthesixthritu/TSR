@@ -134,7 +134,7 @@ function bindLogin(){
 }
 
 function shell(){
-  return`<div class="shell"><nav class="sidebar"><h1>THE SIXTH RITU</h1><a href="#" data-page="dashboard" class="${currentPage==='dashboard'?'active':''}">Dashboard</a><a href="#" data-page="orders" class="${currentPage==='orders'?'active':''}">Orders</a><a href="#" data-page="products" class="${currentPage==='products'?'active':''}">Products</a><a href="#" data-page="coupons" class="${currentPage==='coupons'?'active':''}">Coupons</a><a href="#" data-page="settings" class="${currentPage==='settings'?'active':''}">Settings</a><div class="logout"><a href="#" id="logout-btn">Sign Out</a></div></nav><div class="main"><div id="page-content"></div></div></div>`;
+  return`<div class="shell"><nav class="sidebar"><h1>THE SIXTH RITU</h1><a href="#" data-page="dashboard" class="${currentPage==='dashboard'?'active':''}">Dashboard</a><a href="#" data-page="orders" class="${currentPage==='orders'?'active':''}">Orders</a><a href="#" data-page="products" class="${currentPage==='products'?'active':''}">Products</a><a href="#" data-page="coupons" class="${currentPage==='coupons'?'active':''}">Coupons</a><a href="#" data-page="leads" class="${currentPage==='leads'?'active':''}">Leads</a><a href="#" data-page="settings" class="${currentPage==='settings'?'active':''}">Settings</a><div class="logout"><a href="#" id="logout-btn">Sign Out</a></div></nav><div class="main"><div id="page-content"></div></div></div>`;
 }
 
 function bindNav(){
@@ -150,6 +150,7 @@ async function loadPage(page){
     else if(page==='orders')await ordersPage(el);
     else if(page==='products')await productsPage(el);
     else if(page==='coupons')await couponsPage(el);
+    else if(page==='leads')await leadsPage(el);
     else if(page==='settings')await settingsPage(el);
   }catch(e){el.innerHTML='<p style="color:var(--red)">'+e.message+'</p>'}
 }
@@ -375,6 +376,32 @@ function couponModal(existing){
       if(existing)await api('/admin/coupons/'+existing.id,{method:'PUT',body:JSON.stringify(body)});
       else await api('/admin/coupons',{method:'POST',body:JSON.stringify(body)});
       overlay.remove();toast(existing?'Coupon updated':'Coupon created');loadPage('coupons');
+    }catch(e){toast(e.message)}
+  };
+}
+
+let leadsOffset=0;
+async function leadsPage(el){
+  const limit=50;
+  const data=await api('/admin/leads?limit='+limit+'&offset='+leadsOffset);
+  const leads=data.leads||[];
+  const total=data.total||0;
+  const pageNum=Math.floor(leadsOffset/limit)+1;
+  const totalPages=Math.ceil(total/limit)||1;
+  el.innerHTML=`<div class="topbar"><h2>Leads (${total})</h2><div style="display:flex;gap:8px"><button class="btn btn-outline" id="leads-export">Export CSV</button></div></div><table><thead><tr><th>Name</th><th>Phone</th><th>DOB</th><th>Source</th><th>Date</th><th></th></tr></thead><tbody>${leads.length?leads.map(l=>'<tr><td><strong>'+esc(l.name)+'</strong></td><td>'+esc(l.phone)+'</td><td>'+(l.dob||'—')+'</td><td>'+esc(l.source||'popup')+'</td><td>'+fmtDateTime(l.created_at)+'</td><td><button class="btn btn-sm btn-danger" data-del-lead="'+l.id+'">Delete</button></td></tr>').join(''):'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px">No leads collected yet</td></tr>'}</tbody></table>${total>limit?'<div style="display:flex;justify-content:center;align-items:center;gap:16px;margin-top:16px"><button class="btn btn-sm btn-outline" id="leads-prev"'+(leadsOffset===0?' disabled':'')+'>← Previous</button><span style="color:var(--muted);font-size:13px">Page '+pageNum+' of '+totalPages+'</span><button class="btn btn-sm btn-outline" id="leads-next"'+(leadsOffset+limit>=total?' disabled':'')+'>Next →</button></div>':''}`;
+  $$('[data-del-lead]',el).forEach(btn=>{btn.onclick=async()=>{if(!confirm('Delete this lead?'))return;try{await api('/admin/leads/'+btn.dataset.delLead,{method:'DELETE'});toast('Lead deleted');loadPage('leads')}catch(e){toast(e.message)}}});
+  const prevBtn=$('#leads-prev');if(prevBtn)prevBtn.onclick=()=>{leadsOffset=Math.max(0,leadsOffset-limit);loadPage('leads')};
+  const nextBtn=$('#leads-next');if(nextBtn)nextBtn.onclick=()=>{leadsOffset+=limit;loadPage('leads')};
+  $('#leads-export').onclick=async()=>{
+    try{
+      const all=await api('/admin/leads?limit=10000&offset=0');
+      const rows=all.leads||[];
+      if(!rows.length){toast('No leads to export');return}
+      let csv='Name,Phone,DOB,Source,Date\n';
+      rows.forEach(l=>{csv+='"'+esc(l.name)+'","'+esc(l.phone)+'","'+(l.dob||'')+'","'+esc(l.source||'popup')+'","'+(l.created_at||'')+'"\n'});
+      const blob=new Blob([csv],{type:'text/csv'});
+      const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='tsr-leads-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+      toast('CSV downloaded');
     }catch(e){toast(e.message)}
   };
 }
