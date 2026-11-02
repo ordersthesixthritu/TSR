@@ -36,6 +36,7 @@ export async function initDatabase() {
       price INTEGER NOT NULL DEFAULT 0,
       image TEXT NOT NULL DEFAULT '',
       mood TEXT NOT NULL DEFAULT '',
+      gender TEXT NOT NULL DEFAULT '',
       active INTEGER NOT NULL DEFAULT 1,
       sort_order INTEGER NOT NULL DEFAULT 0,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -263,17 +264,17 @@ async function seedProducts() {
   if (existing) return;
 
   const products = [
-    ['dark-monsoon', 'Dark Monsoon', 'The Power After the Storm', 'Deep • Earthy • Mysterious', 'Saffron • Frankincense • Suede', 'Deep, atmospheric and quietly commanding. Dark Monsoon captures the feeling of rain settling into the earth — where freshness meets depth and oud leaves behind a powerful, lingering presence.', 149900, '/products/dark Monsoon.png', 'bold', 1],
-    ['royal-zafran-rose', 'Royal Zafran Rose', 'A Royal Evening Ritual', 'Rich • Floral • Opulent', 'Bergamot • Jasmine • Cedar', 'Opulent and regal. Royal Zafran Rose pairs the warmth of Indian saffron with the depth of heritage rose — a fragrance that lingers like a rich evening melody.', 149900, '/products/royal zefran rose.png', 'warm', 2],
-    ['golden-ritual', 'Golden Ritual', 'The Evening You Deserve', 'Warm • Sensual • Enveloping', 'Tea • Jasmine • Vanilla', 'Warm, enveloping and deeply personal. Golden Ritual captures the feeling of a perfect evening — where amber and vanilla meet sandalwood in a quiet celebration of presence.', 149900, '/products/golden ritual.png', 'warm', 3],
-    ['golden-leaf', 'Golden Leaf', 'The Brightness of a New Day', 'Bright • Fresh • Uplifting', 'Bergamot • Agarwood • Tonka Bean', 'Bright, optimistic and effortlessly uplifting. Golden Leaf captures the clarity of morning light — where citrus freshness meets green tea and settles into a grounded vetiver base.', 149900, '/products/golden leaf.png', 'fresh', 4],
-    ['crystal-bloom', 'Crystal Bloom', 'The Clarity of Morning Light', 'Clean • Luminous • Airy', 'Sea Water • Jasmine • Cedar', 'Clean, luminous and quietly beautiful. Crystal Bloom captures the first light of morning — where white florals meet a delicate dewdrop freshness and settle into a soft, lasting musk.', 149900, '/products/crystal bloom.png', 'fresh', 5],
-    ['flora-silk', 'Flora Silk', 'Where Softness Meets Strength', 'Soft • Floral • Graceful', 'Bergamot • Rose • Musk', 'Soft, graceful and quietly confident. Flora Silk weaves jasmine and peony into a delicate bouquet — a fragrance that feels like wearing silk against the skin.', 149900, '/products/flora silk.png', 'floral', 6],
+    ['dark-monsoon', 'Dark Monsoon', 'The Power After the Storm', 'Deep • Earthy • Mysterious', 'Saffron • Frankincense • Suede', 'Deep, atmospheric and quietly commanding. Dark Monsoon captures the feeling of rain settling into the earth — where freshness meets depth and oud leaves behind a powerful, lingering presence.', 149900, '/products/dark Monsoon.png', 'bold', 'Male', 1],
+    ['royal-zafran-rose', 'Royal Zafran Rose', 'A Royal Evening Ritual', 'Rich • Floral • Opulent', 'Bergamot • Jasmine • Cedar', 'Opulent and regal. Royal Zafran Rose pairs the warmth of Indian saffron with the depth of heritage rose — a fragrance that lingers like a rich evening melody.', 149900, '/products/royal zefran rose.png', 'warm', 'Unisex', 2],
+    ['golden-ritual', 'Golden Ritual', 'The Evening You Deserve', 'Warm • Sensual • Enveloping', 'Tea • Jasmine • Vanilla', 'Warm, enveloping and deeply personal. Golden Ritual captures the feeling of a perfect evening — where amber and vanilla meet sandalwood in a quiet celebration of presence.', 149900, '/products/golden ritual.png', 'warm', 'Unisex', 3],
+    ['golden-leaf', 'Golden Leaf', 'The Brightness of a New Day', 'Bright • Fresh • Uplifting', 'Bergamot • Agarwood • Tonka Bean', 'Bright, optimistic and effortlessly uplifting. Golden Leaf captures the clarity of morning light — where citrus freshness meets green tea and settles into a grounded vetiver base.', 149900, '/products/golden leaf.png', 'fresh', 'Male', 4],
+    ['crystal-bloom', 'Crystal Bloom', 'The Clarity of Morning Light', 'Clean • Luminous • Airy', 'Sea Water • Jasmine • Cedar', 'Clean, luminous and quietly beautiful. Crystal Bloom captures the first light of morning — where white florals meet a delicate dewdrop freshness and settle into a soft, lasting musk.', 149900, '/products/crystal bloom.png', 'fresh', 'Male', 5],
+    ['flora-silk', 'Flora Silk', 'Where Softness Meets Strength', 'Soft • Floral • Graceful', 'Bergamot • Rose • Musk', 'Soft, graceful and quietly confident. Flora Silk weaves jasmine and peony into a delicate bouquet — a fragrance that feels like wearing silk against the skin.', 149900, '/products/flora silk.png', 'floral', 'Female', 6],
   ];
 
   for (const p of products) {
     await db.prepare(
-      'INSERT INTO products (slug, name, subtitle, character, notes, description, price, image, mood, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      'INSERT INTO products (slug, name, subtitle, character, notes, description, price, image, mood, gender, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     ).run(...p);
   }
   console.log('Seeded 6 products');
@@ -291,6 +292,20 @@ async function runMigrations() {
     }
   } catch (err) {
     console.error('Migration error:', err.message);
+  }
+  try {
+    const genderCheck = await db.prepare(
+      "SELECT column_name FROM information_schema.columns WHERE table_name = 'products' AND column_name = 'gender'"
+    ).get();
+    if (!genderCheck) {
+      await db.exec("ALTER TABLE products ADD COLUMN gender TEXT NOT NULL DEFAULT ''");
+      await db.exec("UPDATE products SET gender = 'Male' WHERE slug IN ('dark-monsoon', 'golden-leaf', 'crystal-bloom')");
+      await db.exec("UPDATE products SET gender = 'Female' WHERE slug = 'flora-silk'");
+      await db.exec("UPDATE products SET gender = 'Unisex' WHERE slug IN ('royal-zafran-rose', 'golden-ritual')");
+      console.log('Migration: added gender column to products');
+    }
+  } catch (err) {
+    console.error('Migration error (gender):', err.message);
   }
   await ensureAdmin();
   await seedCoupons();

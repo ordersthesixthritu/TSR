@@ -26,7 +26,7 @@ router.post('/leads', async (req, res) => {
 router.get('/products', async (_req, res) => {
   try {
     const rows = await db.prepare(
-      'SELECT slug, name, subtitle, character, notes, description, price, image, mood FROM products WHERE active = 1 ORDER BY sort_order ASC'
+      'SELECT slug, name, subtitle, character, notes, description, price, image, mood, gender FROM products WHERE active = 1 ORDER BY sort_order ASC'
     ).all();
     res.json(rows);
   } catch (err) {

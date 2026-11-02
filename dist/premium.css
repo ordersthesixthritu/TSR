@@ -675,13 +675,13 @@ main > section + section {
 
 .loader-v2 img {
   width: min(260px, 60vw);
-  animation: loaderLogo 0.7s 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: loaderLogo 0.9s 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .loader-v2 span {
   width: min(200px, 50vw);
   background: linear-gradient(90deg, var(--gold), #c9a56c);
-  animation: loaderLine 0.7s 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: loaderLine 1s 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .loader-v2 strong {
@@ -689,6 +689,7 @@ main > section + section {
   font-weight: 600;
   letter-spacing: 0.28em;
   color: var(--ink);
+  animation: loaderText 0.6s 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .loader-v2 em {
@@ -696,12 +697,13 @@ main > section + section {
   font-weight: 400;
   letter-spacing: 0.18em;
   color: var(--gold);
+  animation: loaderText 0.6s 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .loader-v2.exit {
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.5s;
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.7s;
 }
 
 /* ── PAGE HERO REFINEMENT ── */

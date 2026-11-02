@@ -1369,13 +1369,13 @@
   padding: 32px 24px;
 }
 .tsr-popup-visual-logo {
-  width: 112px;
-  margin-bottom: 10px;
+  width: 160px;
+  margin-bottom: 14px;
   filter: brightness(0) saturate(100%) invert(48%) sepia(80%) saturate(450%) hue-rotate(15deg) brightness(85%);
 }
 .tsr-popup-visual-tag {
-  font: 400 .7rem/1 var(--v3-serif, 'Cormorant Garamond', serif);
-  letter-spacing: .12em;
+  font: 400 .85rem/1 var(--v3-serif, 'Cormorant Garamond', serif);
+  letter-spacing: .15em;
   color: var(--v3-gold, #a27d4e);
   font-style: italic;
 }
@@ -1536,13 +1536,15 @@
   .tsr-popup.tsr-popup-v5 {
     grid-template-columns: 1fr;
     max-width: 360px;
+    max-height: 90vh;
+    overflow-y: auto;
   }
   .tsr-popup-visual {
     min-height: 160px;
     max-height: 180px;
   }
   .tsr-popup-visual-overlay { padding: 16px; }
-  .tsr-popup-visual-logo { width: 80px; margin-bottom: 6px; }
+  .tsr-popup-visual-logo { width: 120px; margin-bottom: 10px; }
   .tsr-popup-content { padding: 28px 24px 24px; }
   .tsr-popup-title { font-size: 1.35rem; }
   .tsr-popup-subtitle { font-size: .7rem; margin-bottom: 18px; }

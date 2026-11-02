@@ -103,12 +103,12 @@ router.get('/products/:id', authenticate, async (req, res) => {
 
 router.post('/products', authenticate, requireRole('super_admin', 'admin'), async (req, res) => {
   try {
-    const { slug, name, subtitle, character, notes, description, price, image, mood, sort_order } = req.body;
+    const { slug, name, subtitle, character, notes, description, price, image, mood, gender, sort_order } = req.body;
     if (!slug || !name) return res.status(400).json({ error: 'Slug and name required' });
 
     const result = await db.prepare(
-      'INSERT INTO products (slug, name, subtitle, character, notes, description, price, image, mood, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    ).run(slug, name, subtitle || '', character || '', notes || '', description || '', price || 0, image || '', mood || '', sort_order || 0);
+      'INSERT INTO products (slug, name, subtitle, character, notes, description, price, image, mood, gender, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(slug, name, subtitle || '', character || '', notes || '', description || '', price || 0, image || '', mood || '', gender || '', sort_order || 0);
 
     res.status(201).json({ id: result.lastInsertRowid });
   } catch (err) {
@@ -118,7 +118,7 @@ router.post('/products', authenticate, requireRole('super_admin', 'admin'), asyn
 
 router.put('/products/:id', authenticate, requireRole('super_admin', 'admin'), async (req, res) => {
   try {
-    const fields = ['slug', 'name', 'subtitle', 'character', 'notes', 'description', 'price', 'image', 'mood', 'active', 'sort_order'];
+    const fields = ['slug', 'name', 'subtitle', 'character', 'notes', 'description', 'price', 'image', 'mood', 'gender', 'active', 'sort_order'];
     const sets = [];
     const vals = [];
     for (const f of fields) {
