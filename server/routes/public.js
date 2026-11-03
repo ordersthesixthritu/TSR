@@ -98,15 +98,34 @@ router.get('/pages', async (_req, res) => {
   }
 });
 
+router.get('/offers/active', async (_req, res) => {
+  try {
+    const now = new Date().toISOString();
+    const rows = await db.prepare(
+      `SELECT id, type, title, description, pick_count, combo_price, buy_qty, get_qty, get_discount_pct, eligible_products, reward_products, allow_duplicates, starts_at, ends_at
+       FROM offers WHERE active = 1 AND starts_at <= ? AND ends_at >= ?
+       ORDER BY created_at ASC`
+    ).all(now, now);
+    rows.forEach(r => {
+      try { r.eligible_products = JSON.parse(r.eligible_products); } catch { r.eligible_products = []; }
+      try { r.reward_products = JSON.parse(r.reward_products); } catch { r.reward_products = []; }
+    });
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Could not fetch offers' });
+  }
+});
+
 router.get('/coupons/validate', async (req, res) => {
   try {
     const code = (req.query.code || '').toUpperCase().trim();
     if (!code) return res.status(400).json({ error: 'Code required' });
     const row = await db.prepare(
-      'SELECT code, discount_amount, discount_type, max_discount, min_cart, max_uses, current_uses, active, expires_at FROM coupons WHERE code = ?'
+      'SELECT code, discount_amount, discount_type, max_discount, min_cart, max_uses, current_uses, active, expires_at, starts_at FROM coupons WHERE code = ?'
     ).get(code);
     if (!row || !row.active) return res.json({ valid: false });
     if (row.max_uses > 0 && row.current_uses >= row.max_uses) return res.json({ valid: false });
+    if (row.starts_at && new Date(row.starts_at) > new Date()) return res.json({ valid: false });
     if (row.expires_at && new Date(row.expires_at) < new Date()) return res.json({ valid: false });
     res.json({ valid: true, code: row.code, discount: row.discount_amount, discountType: row.discount_type || 'fixed', maxDiscount: row.max_discount || 0, minCart: row.min_cart });
   } catch (err) {

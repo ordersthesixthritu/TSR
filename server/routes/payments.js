@@ -21,15 +21,58 @@ function getRazorpay() {
   return _razorpay;
 }
 
-async function validateCart(items) {
+async function validateCart(items, comboSelections) {
   let total = 0;
+  const comboDiscount = await validateCombos(comboSelections);
+  if (comboDiscount === null) return null;
+
   for (const item of items) {
     const product = await db.prepare('SELECT price FROM products WHERE slug = ? AND active = 1').get(item.slug);
     if (!product) return null;
     if (item.qty < 1 || item.qty > 10) return null;
     total += product.price * item.qty;
   }
-  return total;
+
+  return { subtotal: total, comboDiscount, total: total - comboDiscount };
+}
+
+async function validateCombos(comboSelections) {
+  if (!comboSelections || !Array.isArray(comboSelections) || comboSelections.length === 0) return 0;
+
+  const now = new Date().toISOString();
+  let totalComboDiscount = 0;
+
+  for (const sel of comboSelections) {
+    const offer = await db.prepare(
+      'SELECT * FROM offers WHERE id = ? AND active = 1 AND type = ? AND starts_at <= ? AND ends_at >= ?'
+    ).get(sel.offerId, 'combo', now, now);
+    if (!offer) return null;
+
+    if (!Array.isArray(sel.slugs) || sel.slugs.length !== offer.pick_count) return null;
+
+    let eligible;
+    try { eligible = JSON.parse(offer.eligible_products); } catch { eligible = []; }
+    for (const slug of sel.slugs) {
+      if (!eligible.includes(slug)) return null;
+      const product = await db.prepare('SELECT slug FROM products WHERE slug = ? AND active = 1').get(slug);
+      if (!product) return null;
+    }
+
+    if (!offer.allow_duplicates) {
+      const unique = new Set(sel.slugs);
+      if (unique.size !== sel.slugs.length) return null;
+    }
+
+    let fullPrice = 0;
+    for (const slug of sel.slugs) {
+      const product = await db.prepare('SELECT price FROM products WHERE slug = ?').get(slug);
+      fullPrice += product.price;
+    }
+
+    totalComboDiscount += fullPrice - offer.combo_price;
+  }
+
+  return totalComboDiscount;
 }
 
 async function validateCoupon(code, cartTotal) {
@@ -83,7 +126,7 @@ function validateCustomer(customer) {
 
 router.post('/create-order', async (req, res) => {
   try {
-    const { items, coupon, customer: rawCustomer, paymentMethod } = req.body;
+    const { items, coupon, customer: rawCustomer, paymentMethod, comboSelections } = req.body;
 
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: 'Cart is empty' });
@@ -93,26 +136,36 @@ router.post('/create-order', async (req, res) => {
     const customerError = validateCustomer(customer);
     if (customerError) return res.status(400).json({ error: customerError });
 
-    let total = await validateCart(items);
-    if (total === null) return res.status(400).json({ error: 'Invalid cart' });
+    const cartResult = await validateCart(items, comboSelections);
+    if (cartResult === null) return res.status(400).json({ error: 'Invalid cart or combo selection' });
 
-    const subtotal = total;
-    const discount = await validateCoupon(coupon, total);
-    total = Math.max(0, total - discount);
+    const subtotal = cartResult.subtotal;
+    const comboDiscount = cartResult.comboDiscount;
+
+    let hasCombo = comboSelections && comboSelections.length > 0;
+    let couponDiscount = 0;
+    if (coupon && !hasCombo) {
+      couponDiscount = await validateCoupon(coupon, subtotal);
+    }
+    const discount = comboDiscount + couponDiscount;
+    let total = Math.max(0, subtotal - discount);
 
     const orderNumber = generateOrderNumber();
 
+    const orderItems = items.map(i => ({ slug: i.slug, qty: i.qty }));
+    const orderNotes = hasCombo ? JSON.stringify({ combos: comboSelections }) : '';
+
     if (paymentMethod === 'cod') {
       await db.prepare(
-        `INSERT INTO orders (order_number, status, payment_method, payment_status, customer_name, customer_email, customer_phone, shipping_address, shipping_city, shipping_state, shipping_pincode, items, subtotal, discount, total, coupon_used)
-         VALUES (?, 'confirmed', 'cod', 'unpaid', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO orders (order_number, status, payment_method, payment_status, customer_name, customer_email, customer_phone, shipping_address, shipping_city, shipping_state, shipping_pincode, items, subtotal, discount, total, coupon_used, notes)
+         VALUES (?, 'confirmed', 'cod', 'unpaid', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).run(
         orderNumber,
         customer.name, customer.email, customer.phone,
         customer.address, customer.city, customer.state, customer.pincode,
-        JSON.stringify(items.map(i => ({ slug: i.slug, qty: i.qty }))),
+        JSON.stringify(orderItems),
         subtotal, discount, total,
-        coupon || ''
+        coupon || '', orderNotes
       );
 
       if (coupon) {
@@ -135,7 +188,7 @@ router.post('/create-order', async (req, res) => {
       currency: 'INR',
       receipt: orderNumber,
       notes: {
-        items: JSON.stringify(items.map(i => ({ slug: i.slug, qty: i.qty }))),
+        items: JSON.stringify(orderItems),
         coupon: coupon || '',
         customer_name: customer.name,
         customer_phone: customer.phone,
@@ -143,15 +196,15 @@ router.post('/create-order', async (req, res) => {
     });
 
     await db.prepare(
-      `INSERT INTO orders (order_number, razorpay_order_id, status, payment_method, payment_status, customer_name, customer_email, customer_phone, shipping_address, shipping_city, shipping_state, shipping_pincode, items, subtotal, discount, total, coupon_used)
-       VALUES (?, ?, 'pending', 'prepaid', 'unpaid', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO orders (order_number, razorpay_order_id, status, payment_method, payment_status, customer_name, customer_email, customer_phone, shipping_address, shipping_city, shipping_state, shipping_pincode, items, subtotal, discount, total, coupon_used, notes)
+       VALUES (?, ?, 'pending', 'prepaid', 'unpaid', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(
       orderNumber, rzpOrder.id,
       customer.name, customer.email, customer.phone,
       customer.address, customer.city, customer.state, customer.pincode,
-      JSON.stringify(items.map(i => ({ slug: i.slug, qty: i.qty }))),
+      JSON.stringify(orderItems),
       subtotal, discount, total,
-      coupon || ''
+      coupon || '', orderNotes
     );
 
     res.json({

@@ -6,6 +6,8 @@ import { fileURLToPath } from 'url';
 import db from '../db/index.js';
 import { authenticate, requireRole, verifyPassword, hashPassword, generateToken } from '../middleware/auth.js';
 import { updateOrderInSheet } from '../services/sheets.js';
+import { generateInvoice } from '../services/invoice.js';
+import { queueInvoiceEmail } from '../services/notifications.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const router = Router();
@@ -220,9 +222,37 @@ router.put('/orders/:id/status', authenticate, requireRole('super_admin', 'admin
     if (!valid.includes(status)) return res.status(400).json({ error: 'Invalid status' });
 
     await db.prepare("UPDATE orders SET status = ?, updated_at = NOW() WHERE id = ?").run(status, req.params.id);
+
+    if (status === 'delivered') {
+      const order = await db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
+      if (order && !order.invoice_number) {
+        try {
+          const result = await generateInvoice(order);
+          if (result?.pdfBuffer) {
+            await queueInvoiceEmail(order, result.pdfBuffer);
+          }
+        } catch (err) {
+          console.error('Invoice generation error on delivery:', err.message);
+        }
+      }
+    }
+
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: 'Could not update order status' });
+  }
+});
+
+router.put('/orders/:id/payment-status', authenticate, requireRole('super_admin', 'admin'), async (req, res) => {
+  try {
+    const { payment_status } = req.body;
+    const valid = ['pending', 'paid', 'failed', 'refunded'];
+    if (!valid.includes(payment_status)) return res.status(400).json({ error: 'Invalid payment status' });
+
+    await db.prepare("UPDATE orders SET payment_status = ?, updated_at = NOW() WHERE id = ?").run(payment_status, req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not update payment status' });
   }
 });
 
@@ -246,6 +276,36 @@ router.put('/orders/:id/tracking', authenticate, requireRole('super_admin', 'adm
   }
 });
 
+router.post('/orders/:id/invoice', authenticate, requireRole('super_admin', 'admin'), async (req, res) => {
+  try {
+    const order = await db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+
+    const existing = await db.prepare('SELECT id FROM invoices WHERE order_number = ?').get(order.order_number);
+    const action = req.body.action || 'generate';
+
+    if (action === 'resend') {
+      if (!existing) return res.status(400).json({ error: 'No invoice exists for this order. Generate one first.' });
+      const inv = await db.prepare('SELECT pdf_data FROM invoices WHERE order_number = ?').get(order.order_number);
+      if (inv?.pdf_data) {
+        const pdfBuffer = Buffer.from(inv.pdf_data, 'base64');
+        await queueInvoiceEmail(order, pdfBuffer);
+        return res.json({ ok: true, action: 'resent' });
+      }
+      return res.status(400).json({ error: 'Invoice PDF data not found' });
+    }
+
+    if (existing) return res.status(400).json({ error: 'Invoice already exists for this order' });
+    const result = await generateInvoice(order);
+    if (result?.pdfBuffer) {
+      await queueInvoiceEmail(order, result.pdfBuffer);
+    }
+    res.json({ ok: true, invoiceNumber: result.invoiceNumber });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not generate invoice: ' + err.message });
+  }
+});
+
 router.get('/coupons', authenticate, async (req, res) => {
   try {
     res.json(await db.prepare('SELECT * FROM coupons ORDER BY created_at DESC').all());
@@ -256,13 +316,13 @@ router.get('/coupons', authenticate, async (req, res) => {
 
 router.post('/coupons', authenticate, requireRole('super_admin', 'admin'), async (req, res) => {
   try {
-    const { code, discount_amount, discount_type, max_discount, min_cart, max_uses, active, expires_at } = req.body;
+    const { code, discount_amount, discount_type, max_discount, min_cart, max_uses, active, expires_at, starts_at } = req.body;
     if (!code || !discount_amount) return res.status(400).json({ error: 'Code and discount required' });
     const dtype = discount_type === 'percentage' ? 'percentage' : 'fixed';
 
     const result = await db.prepare(
-      'INSERT INTO coupons (code, discount_amount, discount_type, max_discount, min_cart, max_uses, active, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-    ).run(code.toUpperCase(), discount_amount, dtype, max_discount || 0, min_cart || 0, max_uses || 0, active ?? 1, expires_at || null);
+      'INSERT INTO coupons (code, discount_amount, discount_type, max_discount, min_cart, max_uses, active, expires_at, starts_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(code.toUpperCase(), discount_amount, dtype, max_discount || 0, min_cart || 0, max_uses || 0, active ?? 1, expires_at || null, starts_at || null);
 
     res.status(201).json({ id: result.lastInsertRowid });
   } catch (err) {
@@ -272,7 +332,7 @@ router.post('/coupons', authenticate, requireRole('super_admin', 'admin'), async
 
 router.put('/coupons/:id', authenticate, requireRole('super_admin', 'admin'), async (req, res) => {
   try {
-    const fields = ['code', 'discount_amount', 'discount_type', 'max_discount', 'min_cart', 'max_uses', 'active', 'expires_at'];
+    const fields = ['code', 'discount_amount', 'discount_type', 'max_discount', 'min_cart', 'max_uses', 'active', 'expires_at', 'starts_at'];
     const sets = [];
     const vals = [];
     for (const f of fields) {
@@ -487,6 +547,67 @@ router.put('/settings/:key', authenticate, requireRole('super_admin', 'admin'), 
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: 'Could not update setting' });
+  }
+});
+
+router.get('/offers', authenticate, async (req, res) => {
+  try {
+    res.json(await db.prepare('SELECT * FROM offers ORDER BY created_at DESC').all());
+  } catch (err) {
+    res.status(500).json({ error: 'Could not fetch offers' });
+  }
+});
+
+router.post('/offers', authenticate, requireRole('super_admin', 'admin'), async (req, res) => {
+  try {
+    const { type, title, description, pick_count, combo_price, buy_qty, get_qty, get_discount_pct, eligible_products, reward_products, allow_duplicates, stackable, max_uses, active, starts_at, ends_at } = req.body;
+    if (!title) return res.status(400).json({ error: 'Title required' });
+
+    const result = await db.prepare(
+      `INSERT INTO offers (type, title, description, pick_count, combo_price, buy_qty, get_qty, get_discount_pct, eligible_products, reward_products, allow_duplicates, stackable, max_uses, active, starts_at, ends_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(
+      type || 'combo', title, description || '', pick_count || 2, combo_price || 0,
+      buy_qty || 0, get_qty || 0, get_discount_pct ?? 100,
+      JSON.stringify(eligible_products || []), JSON.stringify(reward_products || []),
+      allow_duplicates ?? 1, stackable ?? 0, max_uses || 0, active ?? 0,
+      starts_at || null, ends_at || null
+    );
+
+    res.status(201).json({ id: result.lastInsertRowid });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not create offer' });
+  }
+});
+
+router.put('/offers/:id', authenticate, requireRole('super_admin', 'admin'), async (req, res) => {
+  try {
+    const fields = ['type', 'title', 'description', 'pick_count', 'combo_price', 'buy_qty', 'get_qty', 'get_discount_pct', 'eligible_products', 'reward_products', 'allow_duplicates', 'stackable', 'max_uses', 'active', 'starts_at', 'ends_at'];
+    const sets = [];
+    const vals = [];
+    for (const f of fields) {
+      if (req.body[f] !== undefined) {
+        const v = (f === 'eligible_products' || f === 'reward_products') ? JSON.stringify(req.body[f]) : req.body[f];
+        sets.push(`${f} = ?`);
+        vals.push(v);
+      }
+    }
+    if (!sets.length) return res.status(400).json({ error: 'No fields to update' });
+    sets.push('updated_at = NOW()');
+    vals.push(req.params.id);
+    await db.prepare(`UPDATE offers SET ${sets.join(', ')} WHERE id = ?`).run(...vals);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not update offer' });
+  }
+});
+
+router.delete('/offers/:id', authenticate, requireRole('super_admin'), async (req, res) => {
+  try {
+    await db.prepare('DELETE FROM offers WHERE id = ?').run(req.params.id);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not delete offer' });
   }
 });
 

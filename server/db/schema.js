@@ -239,9 +239,35 @@ export async function initDatabase() {
     await db.prepare('INSERT INTO invoice_counter (id, current_number, prefix, financial_year) VALUES (1, 0, ?, ?)').run('TSR', '2026-27');
   }
 
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS offers (
+      id SERIAL PRIMARY KEY,
+      type TEXT NOT NULL DEFAULT 'combo',
+      title TEXT NOT NULL DEFAULT '',
+      description TEXT NOT NULL DEFAULT '',
+      pick_count INTEGER NOT NULL DEFAULT 2,
+      combo_price INTEGER NOT NULL DEFAULT 0,
+      buy_qty INTEGER NOT NULL DEFAULT 0,
+      get_qty INTEGER NOT NULL DEFAULT 0,
+      get_discount_pct INTEGER NOT NULL DEFAULT 100,
+      eligible_products TEXT NOT NULL DEFAULT '[]',
+      reward_products TEXT NOT NULL DEFAULT '[]',
+      allow_duplicates INTEGER NOT NULL DEFAULT 1,
+      stackable INTEGER NOT NULL DEFAULT 0,
+      max_uses INTEGER NOT NULL DEFAULT 0,
+      current_uses INTEGER NOT NULL DEFAULT 0,
+      active INTEGER NOT NULL DEFAULT 0,
+      starts_at TIMESTAMPTZ,
+      ends_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
   await seedAdmin();
   await seedProducts();
   await seedCoupons();
+  await seedOffers();
 }
 
 async function seedAdmin() {
@@ -307,8 +333,54 @@ async function runMigrations() {
   } catch (err) {
     console.error('Migration error (gender):', err.message);
   }
+  try {
+    const offersCheck = await db.prepare(
+      "SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename = 'offers'"
+    ).get();
+    if (!offersCheck) {
+      await db.exec(`
+        CREATE TABLE IF NOT EXISTS offers (
+          id SERIAL PRIMARY KEY,
+          type TEXT NOT NULL DEFAULT 'combo',
+          title TEXT NOT NULL DEFAULT '',
+          description TEXT NOT NULL DEFAULT '',
+          pick_count INTEGER NOT NULL DEFAULT 2,
+          combo_price INTEGER NOT NULL DEFAULT 0,
+          buy_qty INTEGER NOT NULL DEFAULT 0,
+          get_qty INTEGER NOT NULL DEFAULT 0,
+          get_discount_pct INTEGER NOT NULL DEFAULT 100,
+          eligible_products TEXT NOT NULL DEFAULT '[]',
+          reward_products TEXT NOT NULL DEFAULT '[]',
+          allow_duplicates INTEGER NOT NULL DEFAULT 1,
+          stackable INTEGER NOT NULL DEFAULT 0,
+          max_uses INTEGER NOT NULL DEFAULT 0,
+          current_uses INTEGER NOT NULL DEFAULT 0,
+          active INTEGER NOT NULL DEFAULT 0,
+          starts_at TIMESTAMPTZ,
+          ends_at TIMESTAMPTZ,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `);
+      console.log('Migration: created offers table');
+    }
+  } catch (err) {
+    console.error('Migration error (offers):', err.message);
+  }
+  try {
+    const startsAtCheck = await db.prepare(
+      "SELECT column_name FROM information_schema.columns WHERE table_name = 'coupons' AND column_name = 'starts_at'"
+    ).get();
+    if (!startsAtCheck) {
+      await db.exec("ALTER TABLE coupons ADD COLUMN starts_at TIMESTAMPTZ");
+      console.log('Migration: added starts_at column to coupons');
+    }
+  } catch (err) {
+    console.error('Migration error (coupons starts_at):', err.message);
+  }
   await ensureAdmin();
   await seedCoupons();
+  await seedOffers();
 }
 
 async function ensureAdmin() {
@@ -358,5 +430,43 @@ async function seedCoupons() {
       ).run(code, pct, 0, 0, 1);
       console.log(`Seeded family coupon ${code} (${pct}%)`);
     }
+  }
+}
+
+async function seedOffers() {
+  const allSlugs = JSON.stringify(['dark-monsoon','royal-zafran-rose','golden-ritual','golden-leaf','crystal-bloom','flora-silk']);
+  const offers = [
+    {
+      type: 'combo',
+      title: 'Pick Any 2',
+      description: 'Choose any 2 luxury fragrances at a special price',
+      pick_count: 2,
+      combo_price: 259900,
+      eligible_products: allSlugs,
+      active: 1,
+      starts_at: '2026-11-04T00:00:00+05:30',
+      ends_at: '2026-11-14T23:59:59+05:30',
+    },
+    {
+      type: 'combo',
+      title: 'Pick Any 3',
+      description: 'Choose any 3 luxury fragrances at an exclusive price',
+      pick_count: 3,
+      combo_price: 369900,
+      eligible_products: allSlugs,
+      active: 1,
+      starts_at: '2026-11-04T00:00:00+05:30',
+      ends_at: '2026-11-14T23:59:59+05:30',
+    },
+  ];
+
+  for (const o of offers) {
+    const existing = await db.prepare('SELECT id FROM offers WHERE title = ? AND type = ?').get(o.title, o.type);
+    if (existing) continue;
+    await db.prepare(
+      `INSERT INTO offers (type, title, description, pick_count, combo_price, eligible_products, active, starts_at, ends_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(o.type, o.title, o.description, o.pick_count, o.combo_price, o.eligible_products, o.active, o.starts_at, o.ends_at);
+    console.log(`Seeded offer: ${o.title}`);
   }
 }

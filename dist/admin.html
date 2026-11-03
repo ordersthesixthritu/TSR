@@ -134,7 +134,7 @@ function bindLogin(){
 }
 
 function shell(){
-  return`<div class="shell"><nav class="sidebar"><h1>THE SIXTH RITU</h1><a href="#" data-page="dashboard" class="${currentPage==='dashboard'?'active':''}">Dashboard</a><a href="#" data-page="orders" class="${currentPage==='orders'?'active':''}">Orders</a><a href="#" data-page="products" class="${currentPage==='products'?'active':''}">Products</a><a href="#" data-page="coupons" class="${currentPage==='coupons'?'active':''}">Coupons</a><a href="#" data-page="leads" class="${currentPage==='leads'?'active':''}">Leads</a><a href="#" data-page="settings" class="${currentPage==='settings'?'active':''}">Settings</a><div class="logout"><a href="#" id="logout-btn">Sign Out</a></div></nav><div class="main"><div id="page-content"></div></div></div>`;
+  return`<div class="shell"><nav class="sidebar"><h1>THE SIXTH RITU</h1><a href="#" data-page="dashboard" class="${currentPage==='dashboard'?'active':''}">Dashboard</a><a href="#" data-page="orders" class="${currentPage==='orders'?'active':''}">Orders</a><a href="#" data-page="products" class="${currentPage==='products'?'active':''}">Products</a><div style="padding:16px 20px 4px;font-size:11px;letter-spacing:1.5px;color:var(--gold);text-transform:uppercase">Marketing</div><a href="#" data-page="offers" class="${currentPage==='offers'?'active':''}" style="padding-left:28px">Offers</a><a href="#" data-page="coupons" class="${currentPage==='coupons'?'active':''}" style="padding-left:28px">Coupons</a><a href="#" data-page="leads" class="${currentPage==='leads'?'active':''}">Leads</a><a href="#" data-page="settings" class="${currentPage==='settings'?'active':''}">Settings</a><div class="logout"><a href="#" id="logout-btn">Sign Out</a></div></nav><div class="main"><div id="page-content"></div></div></div>`;
 }
 
 function bindNav(){
@@ -150,6 +150,7 @@ async function loadPage(page){
     else if(page==='orders')await ordersPage(el);
     else if(page==='products')await productsPage(el);
     else if(page==='coupons')await couponsPage(el);
+    else if(page==='offers')await offersPage(el);
     else if(page==='leads')await leadsPage(el);
     else if(page==='settings')await settingsPage(el);
   }catch(e){el.innerHTML='<p style="color:var(--red)">'+e.message+'</p>'}
@@ -293,6 +294,7 @@ async function viewOrder(id){
       <table class="item-table"><thead><tr><th style="text-align:left">Product</th><th style="text-align:center">Qty</th><th style="text-align:right">Amount</th></tr></thead><tbody>${itemRows}</tbody></table>
       <div style="text-align:right;padding:8px;border-top:1px solid var(--border)">
         <div style="display:flex;justify-content:space-between;padding:2px 0"><span style="color:var(--muted)">Subtotal</span><span>${money(o.subtotal)}</span></div>
+        ${(()=>{let comboInfo='';try{const n=JSON.parse(o.notes||'{}');if(n.combos&&n.combos.length){comboInfo=n.combos.map(c=>'<div style="display:flex;justify-content:space-between;padding:2px 0"><span style="color:var(--gold)">Combo: '+esc(c.title)+' ('+c.slugs.join(', ')+')</span><span style="color:var(--gold)">'+money(c.comboPrice)+'</span></div>').join('');if(n.comboDiscount)comboInfo+='<div style="display:flex;justify-content:space-between;padding:2px 0"><span style="color:var(--gold)">Combo Savings</span><span style="color:var(--gold)">-'+money(n.comboDiscount)+'</span></div>'}}catch{}return comboInfo})()}
         ${o.discount>0?'<div style="display:flex;justify-content:space-between;padding:2px 0"><span style="color:var(--gold)">Discount'+(o.coupon_used?' ('+esc(o.coupon_used)+')':'')+'</span><span style="color:var(--gold)">-'+money(o.discount)+'</span></div>':''}
         <div style="display:flex;justify-content:space-between;padding:2px 0"><span style="color:var(--muted)">Shipping</span><span>Complimentary</span></div>
         <div style="display:flex;justify-content:space-between;padding:4px 0;font-weight:700;font-size:15px;border-top:2px solid var(--text)"><span>Total</span><span>${money(o.total)}</span></div>
@@ -303,7 +305,8 @@ async function viewOrder(id){
       <h4>Payment & Tracking</h4>
       ${o.razorpay_order_id?'<div class="row"><span class="lbl">Razorpay Order ID</span><span style="font-family:monospace;font-size:12px">'+esc(o.razorpay_order_id)+'</span></div>':''}
       ${o.razorpay_payment_id?'<div class="row"><span class="lbl">Razorpay Payment ID</span><span style="font-family:monospace;font-size:12px">'+esc(o.razorpay_payment_id)+'</span></div>':''}
-      ${o.invoice_number?'<div class="row"><span class="lbl">Invoice Number</span><span>'+esc(o.invoice_number)+'</span></div>':''}
+      ${o.invoice_number?'<div class="row"><span class="lbl">Invoice Number</span><span>'+esc(o.invoice_number)+' <a href="/api/payments/invoice/'+esc(o.order_number)+'" target="_blank" class="btn btn-sm btn-outline" style="margin-left:8px">Download PDF</a></span></div>':''}
+      <div class="row"><span class="lbl">Invoice Actions</span><span>${o.invoice_number?'<button class="btn btn-sm btn-outline" id="resend-invoice">Resend Invoice Email</button>':'<button class="btn btn-sm btn-gold" id="gen-invoice">Generate Invoice</button>'}</span></div>
       <div class="row"><span class="lbl">Tracking Number</span><span>${o.tracking_number||'<span style="color:var(--muted)">Not set</span>'}</span></div>
       <div class="row"><span class="lbl">Courier</span><span>${o.courier||'<span style="color:var(--muted)">Not set</span>'}</span></div>
     </div>
@@ -316,6 +319,10 @@ async function viewOrder(id){
       <button class="btn btn-primary btn-sm" id="save-status">Update Status</button>
     </div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-top:12px">
+      <div class="form-group" style="margin:0"><label>Payment Status</label><select id="pay-status-sel">${['pending','paid','failed','refunded'].map(s=>'<option'+(s===o.payment_status?' selected':'')+'>'+s+'</option>').join('')}</select></div>
+      <button class="btn btn-primary btn-sm" id="save-pay-status">Update Payment Status</button>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-top:12px">
       <div class="form-group" style="margin:0"><label>Tracking Number</label><input id="track-num" value="${esc(o.tracking_number||'')}" placeholder="e.g. AW12345678"/></div>
       <div class="form-group" style="margin:0"><label>Courier</label><input id="track-courier" value="${esc(o.courier||'')}" placeholder="e.g. Delhivery"/></div>
       <button class="btn btn-primary btn-sm" id="save-track">Update Tracking</button>
@@ -323,8 +330,13 @@ async function viewOrder(id){
   </div>`;
 
   $('#back-orders').onclick=()=>{dv.style.display='none';if(tbl)tbl.style.display='';if($('.search-bar'))$('.search-bar').style.display='';if($('.filter-tabs'))$('.filter-tabs').style.display=''};
+  const genBtn=$('#gen-invoice');if(genBtn)genBtn.onclick=async()=>{try{await api('/admin/orders/'+id+'/invoice',{method:'POST',body:JSON.stringify({action:'generate'})});toast('Invoice generated and emailed');viewOrder(id)}catch(e){toast(e.message)}};
+  const resendBtn=$('#resend-invoice');if(resendBtn)resendBtn.onclick=async()=>{try{await api('/admin/orders/'+id+'/invoice',{method:'POST',body:JSON.stringify({action:'resend'})});toast('Invoice email resent');viewOrder(id)}catch(e){toast(e.message)}};
   $('#save-status').onclick=async()=>{
     try{await api('/admin/orders/'+id+'/status',{method:'PUT',body:JSON.stringify({status:$('#status-sel').value})});toast('Status updated');viewOrder(id)}catch(e){toast(e.message)}
+  };
+  $('#save-pay-status').onclick=async()=>{
+    try{await api('/admin/orders/'+id+'/payment-status',{method:'PUT',body:JSON.stringify({payment_status:$('#pay-status-sel').value})});toast('Payment status updated');viewOrder(id)}catch(e){toast(e.message)}
   };
   $('#save-track').onclick=async()=>{
     const tn=$('#track-num').value.trim();const cr=$('#track-courier').value.trim();
@@ -353,7 +365,15 @@ async function editProduct(id,products){
 
 async function couponsPage(el){
   const coupons=await api('/admin/coupons');
-  el.innerHTML=`<div class="topbar"><h2>Coupons (${coupons.length})</h2><button class="btn btn-primary" id="add-coupon">+ New Coupon</button></div><table><thead><tr><th>Code</th><th>Discount</th><th>Type</th><th>Min Cart</th><th>Max Uses</th><th>Used</th><th>Active</th><th>Expires</th><th></th></tr></thead><tbody>${coupons.map(c=>'<tr><td><strong>'+c.code+'</strong></td><td>'+(c.discount_type==='percentage'?c.discount_amount+'%':money(c.discount_amount))+'</td><td>'+(c.discount_type==='percentage'?'Percentage':'Fixed')+(c.max_discount>0?' (max '+money(c.max_discount)+')':'')+'</td><td>'+(c.min_cart>0?money(c.min_cart):'—')+'</td><td>'+(c.max_uses>0?c.max_uses:'∞')+'</td><td>'+c.current_uses+'</td><td>'+(c.active?'<span class="badge green">Yes</span>':'<span class="badge red">No</span>')+'</td><td>'+(c.expires_at?fmtDate(c.expires_at):'Never')+'</td><td><button class="btn btn-sm btn-outline" data-edit-coupon="'+c.id+'">Edit</button> <button class="btn btn-sm btn-danger" data-del-coupon="'+c.id+'">Delete</button></td></tr>').join('')}</tbody></table>`;
+  const now=new Date();
+  function couponStatus(c){
+    if(!c.active)return'<span class="badge grey">Inactive</span>';
+    if(c.starts_at&&new Date(c.starts_at)>now)return'<span class="badge yellow">Scheduled</span>';
+    if(c.expires_at&&new Date(c.expires_at)<now)return'<span class="badge red">Expired</span>';
+    if(c.max_uses>0&&c.current_uses>=c.max_uses)return'<span class="badge red">Used Up</span>';
+    return'<span class="badge green">Active</span>';
+  }
+  el.innerHTML=`<div class="topbar"><h2>Coupons (${coupons.length})</h2><button class="btn btn-primary" id="add-coupon">+ New Coupon</button></div><table><thead><tr><th>Code</th><th>Discount</th><th>Type</th><th>Min Cart</th><th>Usage</th><th>Status</th><th>Valid Period</th><th></th></tr></thead><tbody>${coupons.length?coupons.map(c=>'<tr><td><strong>'+c.code+'</strong></td><td>'+(c.discount_type==='percentage'?c.discount_amount+'%':money(c.discount_amount))+'</td><td>'+(c.discount_type==='percentage'?'Percentage':'Fixed')+(c.max_discount>0?' (max '+money(c.max_discount)+')':'')+'</td><td>'+(c.min_cart>0?money(c.min_cart):'—')+'</td><td>'+c.current_uses+(c.max_uses>0?' / '+c.max_uses:'')+'</td><td>'+couponStatus(c)+'</td><td>'+(c.starts_at?fmtDate(c.starts_at):'—')+' to '+(c.expires_at?fmtDate(c.expires_at):'No end')+'</td><td><button class="btn btn-sm btn-outline" data-edit-coupon="'+c.id+'">Edit</button> <button class="btn btn-sm btn-danger" data-del-coupon="'+c.id+'">Delete</button></td></tr>').join(''):'<tr><td colspan="8" class="empty">No coupons yet</td></tr>'}</tbody></table>`;
   $('#add-coupon').onclick=()=>couponModal(null);
   $$('[data-edit-coupon]',el).forEach(btn=>{btn.onclick=()=>couponModal(coupons.find(c=>c.id==btn.dataset.editCoupon))});
   $$('[data-del-coupon]',el).forEach(btn=>{btn.onclick=async()=>{if(!confirm('Delete this coupon?'))return;try{await api('/admin/coupons/'+btn.dataset.delCoupon,{method:'DELETE'});toast('Coupon deleted');loadPage('coupons')}catch(e){toast(e.message)}}});
@@ -361,7 +381,7 @@ async function couponsPage(el){
 
 function couponModal(existing){
   const overlay=document.createElement('div');overlay.className='modal-overlay';
-  overlay.innerHTML=`<div class="modal"><h3>${existing?'Edit Coupon':'New Coupon'}</h3><div class="form-row"><div class="form-group"><label>Code</label><input id="cm-code" value="${existing?existing.code:''}"/></div><div class="form-group"><label>Discount Type</label><select id="cm-type"><option value="fixed"${existing&&existing.discount_type!=='percentage'?' selected':''}>Fixed Amount (₹)</option><option value="percentage"${existing&&existing.discount_type==='percentage'?' selected':''}>Percentage (%)</option></select></div></div><div class="form-row"><div class="form-group"><label id="cm-amt-label">Discount Amount (paise)</label><input id="cm-amount" type="number" value="${existing?existing.discount_amount:'0'}"/></div><div class="form-group"><label>Max Discount (paise, 0=unlimited)</label><input id="cm-maxdisc" type="number" value="${existing?existing.max_discount||0:0}"/></div></div><div class="form-row"><div class="form-group"><label>Min Cart (paise)</label><input id="cm-mincart" type="number" value="${existing?existing.min_cart:0}"/></div><div class="form-group"><label>Max Uses (0=unlimited)</label><input id="cm-maxuses" type="number" value="${existing?existing.max_uses:0}"/></div></div><div class="form-row"><div class="form-group"><label>Active</label><select id="cm-active"><option value="1"${!existing||existing.active?' selected':''}>Yes</option><option value="0"${existing&&!existing.active?' selected':''}>No</option></select></div><div class="form-group"><label>Expires At (optional)</label><input id="cm-expires" type="date" value="${existing&&existing.expires_at?existing.expires_at.slice(0,10):''}"/></div></div><div class="modal-actions"><button class="btn btn-outline" id="cm-cancel">Cancel</button><button class="btn btn-primary" id="cm-save">${existing?'Update':'Create'}</button></div></div>`;
+  overlay.innerHTML=`<div class="modal"><h3>${existing?'Edit Coupon':'New Coupon'}</h3><div class="form-row"><div class="form-group"><label>Code</label><input id="cm-code" value="${existing?existing.code:''}"/></div><div class="form-group"><label>Discount Type</label><select id="cm-type"><option value="fixed"${existing&&existing.discount_type!=='percentage'?' selected':''}>Fixed Amount (₹)</option><option value="percentage"${existing&&existing.discount_type==='percentage'?' selected':''}>Percentage (%)</option></select></div></div><div class="form-row"><div class="form-group"><label id="cm-amt-label">Discount Amount (paise)</label><input id="cm-amount" type="number" value="${existing?existing.discount_amount:'0'}"/></div><div class="form-group"><label>Max Discount (paise, 0=unlimited)</label><input id="cm-maxdisc" type="number" value="${existing?existing.max_discount||0:0}"/></div></div><div class="form-row"><div class="form-group"><label>Min Cart (paise)</label><input id="cm-mincart" type="number" value="${existing?existing.min_cart:0}"/></div><div class="form-group"><label>Max Uses (0=unlimited)</label><input id="cm-maxuses" type="number" value="${existing?existing.max_uses:0}"/></div></div><div class="form-row"><div class="form-group"><label>Starts At (optional)</label><input id="cm-starts" type="date" value="${existing&&existing.starts_at?existing.starts_at.slice(0,10):''}"/></div><div class="form-group"><label>Expires At (optional)</label><input id="cm-expires" type="date" value="${existing&&existing.expires_at?existing.expires_at.slice(0,10):''}"/></div></div><div class="form-group"><label>Active</label><select id="cm-active"><option value="1"${!existing||existing.active?' selected':''}>Yes</option><option value="0"${existing&&!existing.active?' selected':''}>No</option></select></div><div class="modal-actions"><button class="btn btn-outline" id="cm-cancel">Cancel</button><button class="btn btn-primary" id="cm-save">${existing?'Update':'Create'}</button></div></div>`;
   document.body.appendChild(overlay);
   const typeSel=$('#cm-type');
   typeSel.onchange=()=>{$('#cm-amt-label').textContent=typeSel.value==='percentage'?'Discount Percentage (%)':'Discount Amount (paise)'};
@@ -369,13 +389,63 @@ function couponModal(existing){
   $('#cm-cancel').onclick=()=>overlay.remove();
   overlay.onclick=e=>{if(e.target===overlay)overlay.remove()};
   $('#cm-save').onclick=async()=>{
-    const body={code:$('#cm-code').value.trim(),discount_amount:parseInt($('#cm-amount').value)||0,discount_type:$('#cm-type').value,max_discount:parseInt($('#cm-maxdisc').value)||0,min_cart:parseInt($('#cm-mincart').value)||0,max_uses:parseInt($('#cm-maxuses').value)||0,active:parseInt($('#cm-active').value),expires_at:$('#cm-expires').value||null};
+    const body={code:$('#cm-code').value.trim(),discount_amount:parseInt($('#cm-amount').value)||0,discount_type:$('#cm-type').value,max_discount:parseInt($('#cm-maxdisc').value)||0,min_cart:parseInt($('#cm-mincart').value)||0,max_uses:parseInt($('#cm-maxuses').value)||0,active:parseInt($('#cm-active').value),starts_at:$('#cm-starts').value||null,expires_at:$('#cm-expires').value||null};
     if(!body.code){toast('Code required');return}
     if(!body.discount_amount){toast('Discount required');return}
     try{
       if(existing)await api('/admin/coupons/'+existing.id,{method:'PUT',body:JSON.stringify(body)});
       else await api('/admin/coupons',{method:'POST',body:JSON.stringify(body)});
       overlay.remove();toast(existing?'Coupon updated':'Coupon created');loadPage('coupons');
+    }catch(e){toast(e.message)}
+  };
+}
+
+async function offersPage(el){
+  const offers=await api('/admin/offers');
+  const now=new Date();
+  const allProducts=['dark-monsoon','royal-zafran-rose','golden-ritual','golden-leaf','crystal-bloom','flora-silk'];
+  const productNames={'dark-monsoon':'Dark Monsoon','royal-zafran-rose':'Royal Zafran Rose','golden-ritual':'Golden Ritual','golden-leaf':'Golden Leaf','crystal-bloom':'Crystal Bloom','flora-silk':'Flora Silk'};
+  function offerStatus(o){
+    if(!o.active)return'<span class="badge grey">Inactive</span>';
+    if(o.starts_at&&new Date(o.starts_at)>now)return'<span class="badge yellow">Scheduled</span>';
+    if(o.ends_at&&new Date(o.ends_at)<now)return'<span class="badge red">Ended</span>';
+    return'<span class="badge green">Active</span>';
+  }
+  function offerDetail(o){
+    if(o.type==='bogo')return'Buy '+o.buy_qty+' Get '+o.get_qty+(o.get_discount_pct<100?' at '+o.get_discount_pct+'% off':' Free');
+    return'Pick '+o.pick_count+' for '+money(o.combo_price);
+  }
+  el.innerHTML=`<div class="topbar"><h2>Offers (${offers.length})</h2><div class="topbar-actions"><button class="btn btn-primary" id="add-combo">+ Combo Offer</button><button class="btn btn-gold" id="add-bogo">+ BOGO Offer</button></div></div><table><thead><tr><th>Title</th><th>Type</th><th>Details</th><th>Products</th><th>Status</th><th>Period</th><th>Usage</th><th></th></tr></thead><tbody>${offers.length?offers.map(o=>{let ep=[];try{ep=JSON.parse(o.eligible_products||'[]')}catch{}const epNames=ep.map(s=>productNames[s]||s);return'<tr><td><strong>'+esc(o.title)+'</strong><br><small style="color:var(--muted)">'+esc(o.description||'')+'</small></td><td><span class="badge '+(o.type==='bogo'?'blue':'yellow')+'">'+esc(o.type.toUpperCase())+'</span></td><td>'+offerDetail(o)+'</td><td><small>'+(ep.length===6?'All products':epNames.join(', '))+'</small></td><td>'+offerStatus(o)+'</td><td style="white-space:nowrap"><small>'+(o.starts_at?fmtDate(o.starts_at):'—')+'<br>to '+(o.ends_at?fmtDate(o.ends_at):'—')+'</small></td><td>'+o.current_uses+(o.max_uses>0?' / '+o.max_uses:'')+'</td><td style="white-space:nowrap"><button class="btn btn-sm btn-outline" data-edit-offer="'+o.id+'">Edit</button> <button class="btn btn-sm btn-outline" data-toggle-offer="'+o.id+'" data-active="'+o.active+'">'+(o.active?'Deactivate':'Activate')+'</button> <button class="btn btn-sm btn-danger" data-del-offer="'+o.id+'">Del</button></td></tr>'}).join(''):'<tr><td colspan="8" class="empty">No offers yet</td></tr>'}</tbody></table>`;
+  $$('[data-toggle-offer]',el).forEach(btn=>{btn.onclick=async()=>{const newVal=btn.dataset.active==='1'?0:1;try{await api('/admin/offers/'+btn.dataset.toggleOffer,{method:'PUT',body:JSON.stringify({active:newVal})});toast(newVal?'Offer activated':'Offer deactivated');loadPage('offers')}catch(e){toast(e.message)}}});
+  $$('[data-del-offer]',el).forEach(btn=>{btn.onclick=async()=>{if(!confirm('Delete this offer?'))return;try{await api('/admin/offers/'+btn.dataset.delOffer,{method:'DELETE'});toast('Offer deleted');loadPage('offers')}catch(e){toast(e.message)}}});
+  $$('[data-edit-offer]',el).forEach(btn=>{btn.onclick=()=>{const o=offers.find(x=>x.id==btn.dataset.editOffer);if(o)offerModal(o.type==='bogo'?'bogo':'combo',o)}});
+  $('#add-combo').onclick=()=>offerModal('combo',null);
+  $('#add-bogo').onclick=()=>offerModal('bogo',null);
+}
+
+function offerModal(type,existing){
+  const allProducts=['dark-monsoon','royal-zafran-rose','golden-ritual','golden-leaf','crystal-bloom','flora-silk'];
+  const productNames={'dark-monsoon':'Dark Monsoon','royal-zafran-rose':'Royal Zafran Rose','golden-ritual':'Golden Ritual','golden-leaf':'Golden Leaf','crystal-bloom':'Crystal Bloom','flora-silk':'Flora Silk'};
+  let ep=[];try{ep=JSON.parse(existing?existing.eligible_products||'[]':'[]')}catch{}
+  let rp=[];try{rp=JSON.parse(existing?existing.reward_products||'[]':'[]')}catch{}
+  const isCombo=type==='combo';
+  const overlay=document.createElement('div');overlay.className='modal-overlay';
+  overlay.innerHTML=`<div class="modal" style="max-width:540px"><h3>${existing?'Edit':'New'} ${isCombo?'Combo':'BOGO'} Offer</h3><div class="form-group"><label>Title</label><input id="of-title" value="${existing?esc(existing.title):''}" placeholder="${isCombo?'e.g. Pick Any 2':'e.g. Buy 2 Get 1 Free'}"/></div><div class="form-group"><label>Description</label><input id="of-desc" value="${existing?esc(existing.description||''):''}" placeholder="${isCombo?'Choose any 2 fragrances at a special price':'Buy 2 get 1 free on selected fragrances'}"/></div>${isCombo?`<div class="form-row"><div class="form-group"><label>Pick Count</label><input id="of-pick" type="number" value="${existing?existing.pick_count:2}" min="1" max="6"/></div><div class="form-group"><label>Combo Price (paise)</label><input id="of-combo-price" type="number" value="${existing?existing.combo_price:''}" placeholder="259900"/></div></div>`:`<div class="form-row"><div class="form-group"><label>Buy Quantity</label><input id="of-buy-qty" type="number" value="${existing?existing.buy_qty:2}" min="1"/></div><div class="form-group"><label>Get Quantity</label><input id="of-get-qty" type="number" value="${existing?existing.get_qty:1}" min="1"/></div></div><div class="form-group"><label>Discount on Free Items (%)</label><input id="of-disc-pct" type="number" value="${existing?existing.get_discount_pct:100}" min="0" max="100" placeholder="100 = completely free"/></div>`}<div class="form-group"><label>Eligible Products</label><div id="of-products" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px">${allProducts.map(s=>'<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" value="'+s+'" class="of-prod-cb"'+(ep.length===0||ep.includes(s)?' checked':'')+'/> '+productNames[s]+'</label>').join('')}</div></div>${!isCombo?`<div class="form-group"><label>Reward Products (if different from eligible)</label><div id="of-reward-products" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px">${allProducts.map(s=>'<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" value="'+s+'" class="of-reward-cb"'+(rp.length===0||rp.includes(s)?' checked':'')+'/> '+productNames[s]+'</label>').join('')}</div></div>`:''}<div class="form-row"><div class="form-group"><label>Start Date</label><input id="of-start" type="datetime-local" value="${existing&&existing.starts_at?existing.starts_at.slice(0,16):''}"/></div><div class="form-group"><label>End Date</label><input id="of-end" type="datetime-local" value="${existing&&existing.ends_at?existing.ends_at.slice(0,16):''}"/></div></div><div class="form-row"><div class="form-group"><label>Max Uses (0=unlimited)</label><input id="of-maxuses" type="number" value="${existing?existing.max_uses:0}"/></div><div class="form-group"><label>Allow Duplicate Products</label><select id="of-dupes"><option value="0"${existing&&!existing.allow_duplicates?' selected':''}>No</option><option value="1"${!existing||existing.allow_duplicates?' selected':''}>Yes</option></select></div></div><div class="form-group"><label>Active</label><select id="of-active"><option value="1"${existing&&existing.active?' selected':(!existing?'':'')}>Yes</option><option value="0"${existing&&!existing.active?' selected':(!existing?' selected':'')}>No</option></select></div><div class="modal-actions"><button class="btn btn-outline" id="of-cancel">Cancel</button><button class="btn btn-primary" id="of-save">${existing?'Update':'Create'} Offer</button></div></div>`;
+  document.body.appendChild(overlay);
+  $('#of-cancel').onclick=()=>overlay.remove();
+  overlay.onclick=e=>{if(e.target===overlay)overlay.remove()};
+  $('#of-save').onclick=async()=>{
+    const eligibleProducts=[...$$('.of-prod-cb')].filter(c=>c.checked).map(c=>c.value);
+    const body={type,title:$('#of-title').value.trim(),description:$('#of-desc').value.trim(),eligible_products:eligibleProducts,allow_duplicates:parseInt($('#of-dupes').value),max_uses:parseInt($('#of-maxuses').value)||0,active:parseInt($('#of-active').value),starts_at:$('#of-start').value?new Date($('#of-start').value).toISOString():null,ends_at:$('#of-end').value?new Date($('#of-end').value).toISOString():null};
+    if(isCombo){body.pick_count=parseInt($('#of-pick').value)||2;body.combo_price=parseInt($('#of-combo-price').value)||0;}
+    else{body.buy_qty=parseInt($('#of-buy-qty').value)||2;body.get_qty=parseInt($('#of-get-qty').value)||1;body.get_discount_pct=parseInt($('#of-disc-pct').value)??100;const rewardProducts=[...$$('.of-reward-cb')].filter(c=>c.checked).map(c=>c.value);body.reward_products=rewardProducts;}
+    if(!body.title){toast('Title required');return}
+    if(isCombo&&!body.combo_price){toast('Combo price required');return}
+    if(!eligibleProducts.length){toast('Select at least one product');return}
+    try{
+      if(existing)await api('/admin/offers/'+existing.id,{method:'PUT',body:JSON.stringify(body)});
+      else await api('/admin/offers',{method:'POST',body:JSON.stringify(body)});
+      overlay.remove();toast(existing?'Offer updated':'Offer created');loadPage('offers');
     }catch(e){toast(e.message)}
   };
 }
@@ -407,7 +477,7 @@ async function leadsPage(el){
 }
 
 async function settingsPage(el){
-  el.innerHTML=`<div class="topbar"><h2>Settings</h2></div><div class="order-detail"><h3>Business Information</h3><div class="row"><span class="lbl">Business Email</span><span>orders.thesixthritu@gmail.com</span></div><div class="row"><span class="lbl">GSTIN</span><span>24AJWPG1884D1Z2</span></div><div class="row"><span class="lbl">Website</span><span>https://tsr-zsaf.vercel.app</span></div></div><div class="order-detail"><h3>Environment Status</h3><p style="color:var(--muted);font-size:13px;margin-bottom:12px">These show whether key services are configured. Set values in Vercel Dashboard &rarr; Settings &rarr; Environment Variables.</p><div id="env-checks"><p>Checking...</p></div></div>`;
+  el.innerHTML=`<div class="topbar"><h2>Settings</h2></div><div class="order-detail"><h3>Business Information</h3><div class="row"><span class="lbl">Business Email</span><span>thesixthritu@gmail.com</span></div><div class="row"><span class="lbl">GSTIN</span><span>24AJWPG1884D1Z2</span></div><div class="row"><span class="lbl">Website</span><span>https://tsr-zsaf.vercel.app</span></div></div><div class="order-detail"><h3>Environment Status</h3><p style="color:var(--muted);font-size:13px;margin-bottom:12px">These show whether key services are configured. Set values in Vercel Dashboard &rarr; Settings &rarr; Environment Variables.</p><div id="env-checks"><p>Checking...</p></div></div>`;
   try{
     const h=await api('/health');
     let checks='<table><thead><tr><th>Service</th><th>Status</th></tr></thead><tbody>';
