@@ -461,8 +461,15 @@ async function seedOffers() {
   ];
 
   for (const o of offers) {
-    const existing = await db.prepare('SELECT id FROM offers WHERE title = ? AND type = ?').get(o.title, o.type);
-    if (existing) continue;
+    const dupes = await db.prepare('SELECT id FROM offers WHERE title = ? AND type = ?').all(o.title, o.type);
+    if (dupes.length > 1) {
+      for (let i = 1; i < dupes.length; i++) {
+        await db.prepare('DELETE FROM offers WHERE id = ?').run(dupes[i].id);
+      }
+      console.log(`Cleaned ${dupes.length - 1} duplicate(s) of: ${o.title}`);
+      continue;
+    }
+    if (dupes.length === 1) continue;
     await db.prepare(
       `INSERT INTO offers (type, title, description, pick_count, combo_price, eligible_products, active, starts_at, ends_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
