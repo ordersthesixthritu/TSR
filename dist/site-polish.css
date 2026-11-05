@@ -522,13 +522,12 @@ img { max-width: 100%; }
 /* ═══════════════════════════════════════════════
    WhatsApp Chat Widget
    ═══════════════════════════════════════════════ */
-.wa-widget-btn{position:fixed;bottom:24px;right:24px;z-index:199;width:56px;height:56px;border-radius:50%;background:#25D366;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(37,211,102,.35);transition:transform .2s ease,box-shadow .2s ease}
-.wa-widget-btn:hover{transform:scale(1.08);box-shadow:0 6px 24px rgba(37,211,102,.45)}
-.wa-widget-btn svg{width:28px;height:28px;fill:#fff}
+.wa-widget-btn{position:fixed;bottom:24px;right:20px;z-index:199;width:50px;height:50px;border-radius:50%;background:#25D366;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.12);transition:transform .2s ease,box-shadow .2s ease}
+.wa-widget-btn:hover{transform:scale(1.06);box-shadow:0 3px 12px rgba(0,0,0,.18)}
+.wa-widget-btn svg{width:24px;height:24px;fill:#fff}
 .wa-widget-btn.has-panel svg.wa-icon{display:none}
-.wa-widget-btn.has-panel::after{content:'\00d7';color:#fff;font-size:24px;line-height:1}
-@keyframes wa-pulse{0%,100%{box-shadow:0 4px 16px rgba(37,211,102,.35)}50%{box-shadow:0 4px 16px rgba(37,211,102,.35),0 0 0 10px rgba(37,211,102,.08)}}
-.wa-widget-btn:not(.has-panel){animation:wa-pulse 3s ease-in-out infinite}
+.wa-widget-btn.has-panel::after{content:'\00d7';color:#fff;font-size:22px;line-height:1}
+@media(max-width:768px){.wa-widget-btn{width:46px;height:46px;bottom:76px;right:16px}.wa-widget-btn svg{width:22px;height:22px}.wa-greeting{bottom:132px;right:16px}.wa-panel{bottom:132px;right:16px;width:min(340px,calc(100vw - 32px))}}
 
 .wa-greeting{position:fixed;bottom:90px;right:24px;z-index:198;background:#fff;color:#1a1815;padding:10px 16px;border-radius:12px 12px 4px 12px;box-shadow:0 4px 20px rgba(0,0,0,.1);font-size:.85rem;font-family:var(--v3-sans,system-ui);opacity:0;transform:translateY(8px);transition:opacity .4s ease,transform .4s ease;pointer-events:none;max-width:220px}
 .wa-greeting.show{opacity:1;transform:translateY(0);pointer-events:auto}

@@ -1159,16 +1159,16 @@ body.cart-open {
   }
 
   .gallery-main {
-    min-height: 280px;
+    min-height: 360px;
   }
 
   .gallery-slide {
-    min-height: 280px;
+    min-height: 360px;
   }
 
   .gallery-slide img {
-    width: 60%;
-    max-height: 320px;
+    width: 78%;
+    max-height: 400px;
   }
 
   .gallery-slide img.pdp-infographic {
@@ -1350,16 +1350,16 @@ body.cart-open {
 
 @media (max-width: 480px) {
   .gallery-main {
-    min-height: 240px;
+    min-height: 310px;
   }
 
   .gallery-slide {
-    min-height: 240px;
+    min-height: 310px;
   }
 
   .gallery-slide img {
-    width: 55%;
-    max-height: 280px;
+    width: 72%;
+    max-height: 350px;
   }
 
   .gallery-slide img.pdp-infographic {

@@ -40,7 +40,7 @@
 .v3-sec { padding: var(--v3-sy) 0; }
 
 /* ── GLOBAL PAGE HEADING OVERRIDES ── */
-.page-hero h1 { font-size: clamp(2rem, 4vw, 3.2rem); letter-spacing: -0.02em; font-variant-numeric: lining-nums; }
+.page-hero h1, .page-hero .display { font-size: clamp(2rem, 4vw, 3.2rem); letter-spacing: -0.02em; font-variant-numeric: lining-nums; max-width: none; }
 .display { font-size: clamp(1.5rem, 3vw, 2.4rem); font-variant-numeric: lining-nums; }
 .section-head h2 { font-size: clamp(1.5rem, 3vw, 2.4rem); font-variant-numeric: lining-nums; }
 .product-summary h1 { font-size: clamp(1.6rem, 3vw, 2.2rem) !important; letter-spacing: -0.01em; font-variant-numeric: lining-nums; }
@@ -754,9 +754,31 @@
   .v3-btn-ghost { padding: 11px 24px; }
   :root { --v3-sy: clamp(22px, 5vw, 36px); }
   .v3-sec { padding: var(--v3-sy) 0; }
-  .page-hero h1 { font-size: clamp(1.5rem, 5.5vw, 2rem); }
-  .display { font-size: clamp(1.3rem, 5vw, 1.7rem); }
-  .section-head h2 { font-size: clamp(1.3rem, 5vw, 1.7rem); }
+  /* ── Mobile heading scale: 30-36px main, 25-30px section, 20-26px sub ── */
+  .page-hero h1, .page-hero .display { font-size: clamp(1.85rem, 7vw, 2.25rem); max-width: none; }
+  .page-hero p { max-width: none; }
+  .page-hero { padding-block: clamp(40px, 8vw, 56px) clamp(24px, 5vw, 36px); }
+  .display { font-size: clamp(1.55rem, 5.5vw, 1.85rem); }
+  .section-head h2 { font-size: clamp(1.55rem, 5.5vw, 1.85rem); }
+  .section { padding: clamp(36px, 7vw, 52px) 0; }
+  .section-head { margin-bottom: clamp(14px, 3.5vw, 24px); }
+  .intro h2 { font-size: clamp(1.55rem, 5.5vw, 1.85rem); }
+  .intro { gap: clamp(20px, 5vw, 36px); }
+  .info-side { font-size: clamp(1.3rem, 4.5vw, 1.65rem); line-height: 1.15; }
+  .info-copy h2 { font-size: clamp(1.2rem, 4vw, 1.5rem); }
+  .seasons { min-height: 420px; }
+  .seasons h2 { font-size: clamp(1.3rem, 5vw, 1.7rem); }
+  .seasons-final { font-size: clamp(1.3rem, 4.5vw, 1.65rem); }
+  .philosophy h2 { font-size: clamp(1.55rem, 5.5vw, 1.85rem); }
+  .philosophy { min-height: 0; }
+  .campaign h2 { font-size: clamp(1.6rem, 6vw, 2rem); }
+  .campaign { min-height: 300px; }
+  .mood-copy h2 { font-size: clamp(1.55rem, 5.5vw, 1.85rem); }
+  .art-text h2 { font-size: clamp(1.55rem, 5.5vw, 1.85rem); }
+  .art-quote { font-size: clamp(1.2rem, 4.5vw, 1.55rem); }
+  .social h2 { font-size: clamp(1.55rem, 5.5vw, 1.85rem); }
+  .newsletter h2 { font-size: clamp(1.55rem, 5.5vw, 1.85rem); }
+  .statement blockquote { font-size: clamp(1.5rem, 6vw, 2rem); }
 
   /* ── Compact header ── */
   .hdr-row1 .mobile-menu { display: grid !important; }
@@ -924,6 +946,13 @@
   .v3-ritu-card { flex: 0 0 72vw; }
   .v3-ft-usp { grid-template-columns: 1fr; }
   .v3-heading { font-size: 1.3rem; }
+  .page-hero h1, .page-hero .display { font-size: 1.7rem; }
+  .display { font-size: 1.4rem; }
+  .section-head h2 { font-size: 1.4rem; }
+  .intro h2 { font-size: 1.4rem; }
+  .info-side { font-size: 1.15rem; }
+  .info-copy h2 { font-size: 1.1rem; }
+  .seasons h2 { font-size: 1.2rem; }
   .v3-prod-card h3 { font-size: 0.78rem; }
   .v3-prod-card-price { font-size: 0.72rem; }
   .v3-prod-card-actions button { font-size: 0.52rem; padding: 7px 8px; }
