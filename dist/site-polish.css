@@ -518,3 +518,61 @@ img { max-width: 100%; }
   .tsr-order-combo-imgs img { width: 30px; height: 38px; }
   .tsr-order-combo h4 { font-size: 0.78rem; }
 }
+
+/* ═══════════════════════════════════════════════
+   WhatsApp Chat Widget
+   ═══════════════════════════════════════════════ */
+.wa-widget-btn{position:fixed;bottom:24px;right:24px;z-index:199;width:56px;height:56px;border-radius:50%;background:#25D366;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(37,211,102,.35);transition:transform .2s ease,box-shadow .2s ease}
+.wa-widget-btn:hover{transform:scale(1.08);box-shadow:0 6px 24px rgba(37,211,102,.45)}
+.wa-widget-btn svg{width:28px;height:28px;fill:#fff}
+.wa-widget-btn.has-panel svg.wa-icon{display:none}
+.wa-widget-btn.has-panel::after{content:'\00d7';color:#fff;font-size:24px;line-height:1}
+@keyframes wa-pulse{0%,100%{box-shadow:0 4px 16px rgba(37,211,102,.35)}50%{box-shadow:0 4px 16px rgba(37,211,102,.35),0 0 0 10px rgba(37,211,102,.08)}}
+.wa-widget-btn:not(.has-panel){animation:wa-pulse 3s ease-in-out infinite}
+
+.wa-greeting{position:fixed;bottom:90px;right:24px;z-index:198;background:#fff;color:#1a1815;padding:10px 16px;border-radius:12px 12px 4px 12px;box-shadow:0 4px 20px rgba(0,0,0,.1);font-size:.85rem;font-family:var(--v3-sans,system-ui);opacity:0;transform:translateY(8px);transition:opacity .4s ease,transform .4s ease;pointer-events:none;max-width:220px}
+.wa-greeting.show{opacity:1;transform:translateY(0);pointer-events:auto}
+.wa-greeting-close{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#e5e0d5;border:none;cursor:pointer;font-size:12px;line-height:20px;text-align:center;color:#555;padding:0}
+.wa-greeting::after{content:'';position:absolute;bottom:-6px;right:16px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:6px solid #fff}
+
+.wa-panel{position:fixed;bottom:90px;right:24px;z-index:200;width:340px;max-height:520px;background:#faf7f0;border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.15);overflow:hidden;display:flex;flex-direction:column;opacity:0;transform:translateY(16px) scale(.96);transition:opacity .3s ease,transform .3s ease;pointer-events:none}
+.wa-panel.open{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+.wa-panel-header{background:#1a1815;color:#fff;padding:16px 18px;display:flex;align-items:center;gap:12px}
+.wa-panel-avatar{width:40px;height:40px;border-radius:50%;background:#a27d4e;display:flex;align-items:center;justify-content:center;font-family:var(--v3-serif,Georgia);font-size:18px;color:#fff;flex-shrink:0}
+.wa-panel-info{flex:1}
+.wa-panel-name{font-size:.9rem;font-weight:600;font-family:var(--v3-sans,system-ui)}
+.wa-panel-role{font-size:.72rem;color:rgba(255,255,255,.6);margin-top:2px}
+.wa-panel-close{background:none;border:none;color:rgba(255,255,255,.7);font-size:22px;cursor:pointer;padding:0 2px;line-height:1;transition:color .2s}
+.wa-panel-close:hover{color:#fff}
+.wa-panel-body{flex:1;overflow-y:auto;padding:18px 16px;display:flex;flex-direction:column;gap:14px}
+.wa-msg{background:#fff;border-radius:0 12px 12px 12px;padding:12px 14px;font-size:.84rem;line-height:1.55;color:#333;box-shadow:0 1px 3px rgba(0,0,0,.06);font-family:var(--v3-sans,system-ui);opacity:0;transform:translateY(6px);transition:opacity .4s ease .2s,transform .4s ease .2s}
+.wa-panel.open .wa-msg{opacity:1;transform:translateY(0)}
+.wa-msg-time{font-size:.65rem;color:#999;text-align:right;margin-top:6px}
+.wa-quick-label{font-size:.72rem;color:#888;text-transform:uppercase;letter-spacing:.06em;font-family:var(--v3-sans,system-ui)}
+.wa-quick-grid{display:flex;flex-wrap:wrap;gap:6px}
+.wa-quick-btn{background:#fff;border:1px solid rgba(162,125,78,.25);border-radius:20px;padding:6px 14px;font-size:.76rem;color:#1a1815;cursor:pointer;transition:all .2s;font-family:var(--v3-sans,system-ui)}
+.wa-quick-btn:hover{background:#a27d4e;color:#fff;border-color:#a27d4e}
+.wa-panel-footer{padding:12px 16px;border-top:1px solid rgba(0,0,0,.06)}
+.wa-cta{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:#25D366;color:#fff;border:none;border-radius:10px;font-size:.85rem;font-weight:600;cursor:pointer;font-family:var(--v3-sans,system-ui);transition:background .2s}
+.wa-cta:hover{background:#1fba59}
+.wa-cta svg{width:18px;height:18px;fill:#fff}
+
+.wa-footer-hide .wa-widget-btn,.wa-footer-hide .wa-panel,.wa-footer-hide .wa-greeting{opacity:0!important;pointer-events:none!important;transition:opacity .3s ease}
+
+@media (max-width:640px){
+  .wa-widget-btn{width:52px;height:52px;bottom:70px;right:16px}
+  .wa-widget-btn svg{width:26px;height:26px}
+  .wa-greeting{bottom:132px;right:16px;font-size:.8rem;max-width:200px}
+  .wa-panel{bottom:0;right:0;left:0;width:100%;max-height:85vh;border-radius:16px 16px 0 0}
+  .wa-panel-body{max-height:calc(85vh - 140px)}
+}
+@media (max-width:375px){
+  .wa-widget-btn{bottom:66px;right:12px;width:48px;height:48px}
+  .wa-widget-btn svg{width:24px;height:24px}
+  .wa-greeting{bottom:124px;right:12px;font-size:.76rem}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .wa-widget-btn{animation:none}
+  .wa-panel,.wa-msg,.wa-greeting{transition:none}
+}

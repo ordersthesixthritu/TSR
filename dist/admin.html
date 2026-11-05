@@ -478,7 +478,8 @@ async function leadsPage(el){
 }
 
 async function settingsPage(el){
-  el.innerHTML=`<div class="topbar"><h2>Settings</h2></div><div class="order-detail"><h3>Business Information</h3><div class="row"><span class="lbl">Business Email</span><span>thesixthritu@gmail.com</span></div><div class="row"><span class="lbl">GSTIN</span><span>24AJWPG1884D1Z2</span></div><div class="row"><span class="lbl">Website</span><span>https://tsr-zsaf.vercel.app</span></div></div><div class="order-detail"><h3>Instagram Feed</h3><div id="ig-settings"><p>Loading...</p></div></div><div class="order-detail"><h3>Environment Status</h3><p style="color:var(--muted);font-size:13px;margin-bottom:12px">These show whether key services are configured. Set values in Vercel Dashboard &rarr; Settings &rarr; Environment Variables.</p><div id="env-checks"><p>Checking...</p></div></div>`;
+  el.innerHTML=`<div class="topbar"><h2>Settings</h2></div><div class="order-detail"><h3>Business Information</h3><div class="row"><span class="lbl">Business Email</span><span>thesixthritu@gmail.com</span></div><div class="row"><span class="lbl">GSTIN</span><span>24AJWPG1884D1Z2</span></div><div class="row"><span class="lbl">Website</span><span>https://tsr-zsaf.vercel.app</span></div></div><div class="order-detail"><h3>WhatsApp Widget</h3><div id="wa-settings"><p>Loading...</p></div></div><div class="order-detail"><h3>Instagram Feed</h3><div id="ig-settings"><p>Loading...</p></div></div><div class="order-detail"><h3>Environment Status</h3><p style="color:var(--muted);font-size:13px;margin-bottom:12px">These show whether key services are configured. Set values in Vercel Dashboard &rarr; Settings &rarr; Environment Variables.</p><div id="env-checks"><p>Checking...</p></div></div>`;
+  loadWaSettings();
   loadIgSettings();
   try{
     const h=await api('/health');
@@ -518,6 +519,33 @@ async function loadIgSettings(){
   }catch(e){el.innerHTML='<p style="color:var(--red)">'+e.message+'</p>'}
 }
 
+function loadWaSettings(){
+  const el=$('#wa-settings');
+  if(!el)return;
+  let cfg=JSON.parse(localStorage.getItem('tsr-wa-config')||'null')||{enabled:true,phone:'919157806069',greeting:'Need help? Chat with us! 👋',defaultMsg:'Hello The Sixth Ritu! I need some assistance with your fragrances or my order.',quickQuestions:true};
+  let html='<table style="margin-bottom:12px"><tbody>';
+  html+='<tr><td>Widget Status</td><td>'+(cfg.enabled?'<span class="badge green">Enabled</span>':'<span class="badge grey">Disabled</span>')+'</td></tr>';
+  html+='<tr><td>WhatsApp Number</td><td>+'+cfg.phone+'</td></tr>';
+  html+='<tr><td>Quick Questions</td><td>'+(cfg.quickQuestions?'<span class="badge green">Enabled</span>':'<span class="badge grey">Disabled</span>')+'</td></tr>';
+  html+='</tbody></table>';
+  html+='<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">';
+  html+='<label style="font-size:12px;color:var(--muted)">WhatsApp Number (with country code, no +)</label>';
+  html+='<input type="text" id="wa-phone" value="'+cfg.phone+'" style="padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:inherit;max-width:200px" pattern="[0-9]{10,15}"/>';
+  html+='<label style="font-size:12px;color:var(--muted)">Greeting Bubble Text</label>';
+  html+='<input type="text" id="wa-greet" value="'+(cfg.greeting||'').replace(/"/g,'&quot;')+'" style="padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:inherit"/>';
+  html+='<label style="font-size:12px;color:var(--muted)">Default Chat Message</label>';
+  html+='<input type="text" id="wa-msg" value="'+(cfg.defaultMsg||'').replace(/"/g,'&quot;')+'" style="padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:inherit"/>';
+  html+='</div>';
+  html+='<div style="display:flex;gap:8px;flex-wrap:wrap">';
+  html+='<button class="btn btn-primary btn-sm" id="wa-toggle">'+(cfg.enabled?'Disable Widget':'Enable Widget')+'</button>';
+  html+='<button class="btn btn-gold btn-sm" id="wa-save">Save Settings</button>';
+  html+='<button class="btn btn-sm" id="wa-qq-toggle" style="background:var(--bg);border:1px solid var(--border)">'+(cfg.quickQuestions?'Disable Quick Qs':'Enable Quick Qs')+'</button>';
+  html+='</div>';
+  el.innerHTML=html;
+  $('#wa-toggle').onclick=()=>{cfg.enabled=!cfg.enabled;localStorage.setItem('tsr-wa-config',JSON.stringify(cfg));toast(cfg.enabled?'WhatsApp widget enabled':'WhatsApp widget disabled');loadWaSettings()};
+  $('#wa-qq-toggle').onclick=()=>{cfg.quickQuestions=!cfg.quickQuestions;localStorage.setItem('tsr-wa-config',JSON.stringify(cfg));toast(cfg.quickQuestions?'Quick questions enabled':'Quick questions disabled');loadWaSettings()};
+  $('#wa-save').onclick=()=>{const phone=$('#wa-phone').value.replace(/[^0-9]/g,'');if(phone.length<10||phone.length>15){toast('Enter a valid phone number (10-15 digits)');return}cfg.phone=phone;cfg.greeting=$('#wa-greet').value.trim();cfg.defaultMsg=$('#wa-msg').value.trim();localStorage.setItem('tsr-wa-config',JSON.stringify(cfg));toast('WhatsApp settings saved');loadWaSettings()};
+}
 render();
 </script>
 </body>

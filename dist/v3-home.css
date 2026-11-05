@@ -551,7 +551,7 @@
 }
 .v3-ft-brand img {
   width: min(220px, 60%);
-  filter: brightness(0) invert(1) sepia(0.2) saturate(1.5) hue-rotate(5deg);
+  filter: none;
   margin-bottom: 14px;
 }
 .v3-ft-tagline-text {
