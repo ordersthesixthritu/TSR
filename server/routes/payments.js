@@ -144,7 +144,23 @@ router.post('/create-order', async (req, res) => {
 
     let hasCombo = comboSelections && comboSelections.length > 0;
     let couponDiscount = 0;
-    if (coupon && !hasCombo) {
+    if (coupon && hasCombo) {
+      const comboSlugs = new Set();
+      for (const sel of comboSelections) {
+        for (const slug of sel.slugs) comboSlugs.add(slug);
+      }
+      let regularSubtotal = 0;
+      for (const item of items) {
+        if (!comboSlugs.has(item.slug)) {
+          const product = await db.prepare('SELECT price FROM products WHERE slug = ? AND active = 1').get(item.slug);
+          if (product) regularSubtotal += product.price * item.qty;
+        }
+      }
+      if (regularSubtotal > 0) {
+        couponDiscount = await validateCoupon(coupon, regularSubtotal);
+        if (couponDiscount > regularSubtotal) couponDiscount = regularSubtotal;
+      }
+    } else if (coupon && !hasCombo) {
       couponDiscount = await validateCoupon(coupon, subtotal);
     }
     const discount = comboDiscount + couponDiscount;

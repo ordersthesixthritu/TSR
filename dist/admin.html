@@ -478,7 +478,8 @@ async function leadsPage(el){
 }
 
 async function settingsPage(el){
-  el.innerHTML=`<div class="topbar"><h2>Settings</h2></div><div class="order-detail"><h3>Business Information</h3><div class="row"><span class="lbl">Business Email</span><span>thesixthritu@gmail.com</span></div><div class="row"><span class="lbl">GSTIN</span><span>24AJWPG1884D1Z2</span></div><div class="row"><span class="lbl">Website</span><span>https://tsr-zsaf.vercel.app</span></div></div><div class="order-detail"><h3>Environment Status</h3><p style="color:var(--muted);font-size:13px;margin-bottom:12px">These show whether key services are configured. Set values in Vercel Dashboard &rarr; Settings &rarr; Environment Variables.</p><div id="env-checks"><p>Checking...</p></div></div>`;
+  el.innerHTML=`<div class="topbar"><h2>Settings</h2></div><div class="order-detail"><h3>Business Information</h3><div class="row"><span class="lbl">Business Email</span><span>thesixthritu@gmail.com</span></div><div class="row"><span class="lbl">GSTIN</span><span>24AJWPG1884D1Z2</span></div><div class="row"><span class="lbl">Website</span><span>https://tsr-zsaf.vercel.app</span></div></div><div class="order-detail"><h3>Instagram Feed</h3><div id="ig-settings"><p>Loading...</p></div></div><div class="order-detail"><h3>Environment Status</h3><p style="color:var(--muted);font-size:13px;margin-bottom:12px">These show whether key services are configured. Set values in Vercel Dashboard &rarr; Settings &rarr; Environment Variables.</p><div id="env-checks"><p>Checking...</p></div></div>`;
+  loadIgSettings();
   try{
     const h=await api('/health');
     let checks='<table><thead><tr><th>Service</th><th>Status</th></tr></thead><tbody>';
@@ -488,6 +489,33 @@ async function settingsPage(el){
     checks+='<p style="margin-top:12px;color:var(--muted);font-size:12px">SMTP, Google Sheets, and GST configuration status is visible in server logs during cold start.</p>';
     $('#env-checks').innerHTML=checks;
   }catch(e){$('#env-checks').innerHTML='<p style="color:var(--red)">'+e.message+'</p>'}
+}
+async function loadIgSettings(){
+  const el=$('#ig-settings');
+  try{
+    const d=await api('/instagram/settings');
+    let html='<table style="margin-bottom:12px"><tbody>';
+    html+='<tr><td>Connection Status</td><td>'+(d.connected?'<span class="badge green">Connected</span>':'<span class="badge red">Not Connected</span>')+'</td></tr>';
+    html+='<tr><td>Feed Enabled</td><td>'+(d.enabled?'<span class="badge green">Enabled</span>':'<span class="badge grey">Disabled</span>')+'</td></tr>';
+    html+='<tr><td>Visible Posts</td><td>'+d.post_count+'</td></tr>';
+    html+='<tr><td>Cached Posts</td><td>'+d.cached_posts+'</td></tr>';
+    html+='<tr><td>Last Sync</td><td>'+(d.last_sync?new Date(d.last_sync).toLocaleString():'Never')+'</td></tr>';
+    html+='<tr><td>Last Sync Status</td><td>'+(d.last_sync_ok?'<span class="badge green">OK</span>':'<span class="badge red">Failed</span>')+'</td></tr>';
+    html+='</tbody></table>';
+    if(!d.connected){
+      html+='<p style="color:var(--muted);font-size:13px;margin-bottom:12px">Set <code>INSTAGRAM_ACCESS_TOKEN</code> and <code>INSTAGRAM_USER_ID</code> in Vercel Environment Variables to connect.</p>';
+    }
+    html+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">';
+    html+='<button class="btn btn-primary btn-sm" id="ig-toggle">'+(d.enabled?'Disable Feed':'Enable Feed')+'</button>';
+    html+='<button class="btn btn-gold btn-sm" id="ig-refresh">Refresh Feed</button>';
+    html+='<select id="ig-count" style="padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;font-family:inherit">';
+    [3,4,6,9,12].forEach(n=>{html+='<option value="'+n+'"'+(d.post_count===n?' selected':'')+'>'+n+' posts</option>'});
+    html+='</select></div>';
+    el.innerHTML=html;
+    $('#ig-toggle').onclick=async()=>{try{await api('/instagram/settings',{method:'PUT',body:JSON.stringify({enabled:!d.enabled})});toast(d.enabled?'Instagram feed disabled':'Instagram feed enabled');loadIgSettings()}catch(e){toast(e.message)}};
+    $('#ig-refresh').onclick=async()=>{try{$('#ig-refresh').disabled=true;$('#ig-refresh').textContent='Refreshing...';const r=await api('/instagram/refresh',{method:'POST'});toast('Feed refreshed: '+r.count+' posts');loadIgSettings()}catch(e){toast(e.message);$('#ig-refresh').disabled=false;$('#ig-refresh').textContent='Refresh Feed'}};
+    $('#ig-count').onchange=async(e)=>{try{await api('/instagram/settings',{method:'PUT',body:JSON.stringify({post_count:parseInt(e.target.value)})});toast('Post count updated');loadIgSettings()}catch(e2){toast(e2.message)}};
+  }catch(e){el.innerHTML='<p style="color:var(--red)">'+e.message+'</p>'}
 }
 
 render();

@@ -197,58 +197,62 @@ img { max-width: 100%; }
 }
 
 @media (max-width: 640px) {
-  html { scroll-padding-top: 78px; }
-  .container { width: min(calc(100% - 38px), 560px); }
-  .section { padding-block: 64px; }
-  .section-head { display: block; margin-bottom: 28px; }
-  .section-head > p { margin-top: 14px; }
-  .journey-intro { padding-block: 68px; }
-  .journey-title h2 { font-size: clamp(3rem, 13.5vw, 4.2rem); }
-  .journey-copy { font-size: .98rem; }
-  .stage-copy h2 { font-size: clamp(3.25rem, 15vw, 4.7rem); }
-  .stage-copy h3 { font-size: 1.3rem; }
-  .stage-description { font-size: .96rem; }
-  .ritu-list h2 { font-size: clamp(3.1rem, 14.5vw, 4.35rem); }
+  html { scroll-padding-top: 60px; }
+  .container { width: min(calc(100% - 32px), 560px); }
+  .section { padding-block: clamp(28px, 7vw, 44px); }
+  .section-head { display: block; margin-bottom: 20px; }
+  .section-head > p { margin-top: 10px; font-size: 0.82rem; }
+  .section-head h2 { font-size: clamp(1.3rem, 5vw, 1.7rem); }
+  .journey-intro { padding-block: 48px; }
+  .journey-title h2 { font-size: clamp(2rem, 9vw, 2.8rem); }
+  .journey-copy { font-size: .88rem; }
+  .stage-copy h2 { font-size: clamp(2.2rem, 10vw, 3rem); }
+  .stage-copy h3 { font-size: 1.1rem; }
+  .stage-description { font-size: .86rem; }
+  .ritu-list h2 { font-size: clamp(2rem, 9vw, 2.8rem); }
   .ritu-choice small { max-width: 47%; line-height: 1.35; text-align: right; }
   .season-step { min-height: 0; }
-  .season-step h2 { font-size: clamp(3rem, 15vw, 4.25rem); }
-  .memory-campaign { height: 555px; min-height: 0; }
-  .memory-copy h2 { font-size: clamp(3.7rem, 17vw, 5.2rem); }
-  .art-copy h2 { font-size: clamp(3rem, 13.5vw, 4.1rem); }
-  .product-grid { gap: 10px; }
-  .product-card { padding: 7px; }
+  .season-step h2 { font-size: clamp(2rem, 10vw, 2.8rem); }
+  .memory-campaign { height: 420px; min-height: 0; }
+  .memory-copy h2 { font-size: clamp(2.4rem, 11vw, 3.4rem); }
+  .art-copy h2 { font-size: clamp(2rem, 9vw, 2.8rem); }
+  .product-grid { gap: 8px; }
+  .product-card { padding: 5px; }
   .product-card:hover { transform: none; box-shadow: none; }
-  .product-image { height: clamp(215px, 60vw, 300px); }
-  .product-info { padding: 13px 2px 5px; }
-  .product-info h3 { font-size: clamp(1.15rem, 6.2vw, 1.48rem); line-height: 1; }
-  .product-info p { font-size: .66rem; line-height: 1.45; }
-  .product-info > p { font-size: .58rem; letter-spacing: .04em; }
-  .card-wish { width: 34px; height: 34px; }
-  .card-actions { grid-template-columns: 1fr; padding-top: 10px; gap: 6px; }
-  .card-actions button { min-height: 37px; font-size: .56rem; letter-spacing: .08em; }
-  .page-hero { padding-block: 68px 48px; }
-  .page-hero h1 { font-size: clamp(3.2rem, 15vw, 4.7rem); }
-  .page-hero p { font-size: .98rem; }
-  .shop-toolbar { font-size: .8rem; }
-  .product-gallery { min-height: 420px; }
-  .product-gallery img { height: 410px; }
-  .product-summary h1 { font-size: clamp(3.2rem, 15vw, 4.8rem); }
-  .purchase-row { display: grid; grid-template-columns: 94px 1fr; }
-  .purchase-row .btn { min-width: 0; padding-inline: 10px; }
-  .newsletter-v2-grid { gap: 30px; }
-  .newsletter-form > p:first-child { font-size: .98rem; }
+  .product-image { height: clamp(180px, 48vw, 240px); }
+  .product-info { padding: 8px 2px 4px; }
+  .product-info h3 { font-size: clamp(0.88rem, 4vw, 1.1rem); line-height: 1.15; }
+  .product-info p { font-size: .62rem; line-height: 1.4; }
+  .product-info > p { font-size: .55rem; letter-spacing: .04em; }
+  .card-wish { width: 28px; height: 28px; }
+  .card-actions { grid-template-columns: 1fr; padding-top: 8px; gap: 4px; }
+  .card-actions button { min-height: 32px; font-size: .52rem; letter-spacing: .08em; }
+  .page-hero { padding-block: 48px 32px; }
+  .page-hero h1 { font-size: clamp(1.8rem, 8vw, 2.6rem); }
+  .page-hero p { font-size: .85rem; }
+  .shop-toolbar { font-size: .75rem; }
+  .product-gallery { min-height: 280px; }
+  .product-gallery img { height: 280px; }
+  .product-summary h1 { font-size: clamp(1.6rem, 7vw, 2.2rem); }
+  .purchase-row { display: grid; grid-template-columns: 82px 1fr; }
+  .purchase-row .btn { min-width: 0; padding-inline: 10px; font-size: 0.72rem; }
+  .newsletter-v2-grid { gap: 20px; }
+  .newsletter-form > p:first-child { font-size: .88rem; }
   .email-form { display: grid; grid-template-columns: 1fr; }
-  .email-form button { min-height: 50px; }
-  .footer-v2 .footer-bottom { display: grid; gap: 9px; font-size: .65rem; }
-  .info-layout { width: min(calc(100% - 38px), 560px); padding-block: 56px; }
-  .info-side { font-size: clamp(2.7rem, 13vw, 4rem); }
-  .info-copy { font-size: .98rem; }
-  .search-input { min-height: 58px; font-size: clamp(2rem, 11vw, 3.2rem); }
-  .modal { inset: auto 0 0; width: 100%; max-height: 86dvh; border: 0; border-top: 1px solid var(--line-soft); transform: translateY(110%); padding: 20px 18px 26px; }
+  .email-form button { min-height: 44px; font-size: 0.68rem; }
+  .footer-v2 .footer-bottom { display: grid; gap: 8px; font-size: .6rem; }
+  .info-layout { width: min(calc(100% - 32px), 560px); padding-block: 36px; }
+  .info-side { font-size: clamp(1.8rem, 8vw, 2.6rem); }
+  .info-copy { font-size: .88rem; }
+  .search-input { min-height: 48px; font-size: clamp(1.4rem, 7vw, 2rem); }
+  .modal { inset: auto 0 0; width: 100%; max-height: 86dvh; border: 0; border-top: 1px solid var(--line-soft); transform: translateY(110%); padding: 16px 14px 20px; }
   .modal.open { transform: translateY(0); }
-  .quickview { grid-template-columns: .8fr 1fr; gap: 16px; }
-  .quickview img { height: 260px; }
-  .quickview h2 { font-size: 2.1rem; margin: 18px 0 8px; }
+  .quickview { grid-template-columns: .8fr 1fr; gap: 12px; }
+  .quickview img { height: 200px; }
+  .quickview h2 { font-size: 1.6rem; margin: 12px 0 6px; }
+  .policy-content { font-size: 0.82rem; line-height: 1.7; }
+  .policy-content h3 { font-size: 1rem; margin-top: 24px; }
+  .policy-content h4 { font-size: 0.88rem; }
 }
 
 @media (max-width: 375px) {
@@ -473,10 +477,44 @@ img { max-width: 100%; }
 .tsr-order-combo del { color: #999; font-size: .8rem; margin-left: 4px; }
 
 @media (max-width: 640px) {
-  .combo-modal { padding: 28px 16px 20px; }
-  .combo-modal-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .combo-pick img { width: 60px; height: 76px; }
-  .combo-modal-footer { flex-direction: column; }
-  .combo-add-btn { width: 100%; min-width: auto; }
-  .combo-offers-grid { grid-template-columns: 1fr; gap: 20px; }
+  /* Compact combo section */
+  .combo-section { padding-top: clamp(24px, 6vw, 36px); padding-bottom: clamp(24px, 6vw, 36px); }
+  .combo-head { margin-bottom: 24px; }
+  .combo-head .display { font-size: clamp(1.3rem, 5vw, 1.7rem); margin: 6px 0 8px; }
+  .combo-sub { font-size: 0.85rem; }
+  .combo-offers-grid { grid-template-columns: 1fr; gap: 14px; max-width: 320px; }
+  .combo-card { padding: 24px 20px; }
+  .combo-card h3 { font-size: 1.3rem; margin-bottom: 6px; }
+  .combo-card-desc { font-size: 0.8rem; margin-bottom: 14px; }
+  .combo-card-badge { font-size: 0.62rem; padding: 3px 10px; top: -10px; right: 14px; }
+  .combo-card-price { margin-bottom: 16px; }
+  .combo-old { font-size: 0.85rem; }
+  .combo-new { font-size: 1.25rem; }
+  .combo-card .btn { padding: 10px 20px; font-size: 0.72rem; }
+
+  /* Compact combo modal */
+  .combo-modal { padding: 24px 14px 18px; max-height: 85vh; }
+  .combo-modal-close { top: 8px; right: 10px; font-size: 1.4rem; }
+  .combo-modal-header { margin-bottom: 18px; }
+  .combo-modal-header h2 { font-size: 1.4rem; }
+  .combo-modal-header p { font-size: 0.82rem; }
+  .combo-modal-price { font-size: 0.92rem; }
+  .combo-modal-price strong { font-size: 1.1rem; }
+  .combo-modal-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 16px; }
+  .combo-pick { padding: 12px 8px; }
+  .combo-pick img { width: 50px; height: 64px; }
+  .combo-pick h4 { font-size: 0.76rem; }
+  .combo-pick p { font-size: 0.66rem; }
+  .combo-pick-check { width: 18px; height: 18px; font-size: 0.6rem; top: 6px; right: 6px; }
+  .combo-modal-footer { flex-direction: column; gap: 10px; padding-top: 12px; }
+  .combo-selected-count { font-size: 0.78rem; }
+  .combo-add-btn { width: 100%; min-width: auto; padding: 10px; font-size: 0.72rem; }
+
+  /* Compact combo in cart/checkout */
+  .cart-combo-item { padding: 12px; margin-bottom: 8px; }
+  .cart-combo-badge { font-size: 0.58rem; padding: 2px 8px; left: 12px; }
+  .cart-combo-products img { width: 40px; height: 50px; }
+  .tsr-order-combo { padding: 10px; }
+  .tsr-order-combo-imgs img { width: 30px; height: 38px; }
+  .tsr-order-combo h4 { font-size: 0.78rem; }
 }

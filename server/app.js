@@ -13,6 +13,7 @@ import { initDatabase } from './db/schema.js';
 import paymentRoutes from './routes/payments.js';
 import adminRoutes from './routes/admin.js';
 import publicRoutes from './routes/public.js';
+import instagramRoutes from './routes/instagram.js';
 import { processEmailQueue } from './services/notifications.js';
 
 const app = express();
@@ -67,6 +68,7 @@ app.use('/api/payments/create-order', orderLimiter);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/public', publicRoutes);
+app.use('/api/instagram', instagramRoutes);
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
