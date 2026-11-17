@@ -658,6 +658,71 @@
   color: #DCC9B5;
 }
 
+/* ── Desktop footer: links always visible, no accordion ── */
+@media (min-width: 641px) {
+  .v3-ft-col .footer-col-body { max-height: none !important; overflow: visible !important; }
+  .v3-ft-col h4 { cursor: default; }
+  .v3-ft-col h4 .chev { display: none; }
+}
+
+/* ── Marketplace availability ── */
+.v3-ft-marketplace {
+  max-width: var(--v3-max);
+  margin: 0 auto;
+  padding: 20px var(--v3-gutter) 16px;
+  text-align: center;
+}
+.v3-ft-mp-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.v3-ft-mp-line i {
+  flex: 0 0 40px;
+  height: 1px;
+  background: rgba(229,195,139,0.25);
+}
+.v3-ft-mp-line span {
+  font: 500 0.5rem/1 var(--v3-sans);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(229,195,139,0.55);
+}
+.v3-ft-mp-badges {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.v3-ft-mp-badge {
+  background: #fff;
+  border-radius: 6px;
+  padding: 10px 20px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  transition: box-shadow 0.2s;
+}
+.v3-ft-mp-badge:hover {
+  box-shadow: 0 2px 12px rgba(229,195,139,0.25);
+}
+.mp-amz-txt {
+  font: 700 1.15rem/1 Arial, Helvetica, sans-serif;
+  color: #232F3E;
+  letter-spacing: -0.02em;
+  display: block;
+}
+.mp-amz-sfx { font-weight: 400; font-size: 0.85em; }
+.mp-amz-arr { width: 56px; height: 14px; margin-top: -2px; display: block; }
+.mp-fk-txt {
+  font: 700 italic 1.15rem/1 Arial, Helvetica, sans-serif;
+  color: #2874F0;
+}
+
 /* ════════════════════════════════════════════════════
    SCROLL REVEAL
    ════════════════════════════════════════════════════ */
@@ -883,6 +948,15 @@
   .v3-ft-bottom span { font-size: 0.52rem; }
   .v3-ft-bottom a { font-size: 0.52rem; }
   .pay-badge { font-size: 0.43rem; padding: 2px 5px; }
+  .v3-ft-marketplace { padding: 14px var(--v3-gutter) 10px; }
+  .v3-ft-mp-line { gap: 8px; margin-bottom: 10px; }
+  .v3-ft-mp-line i { flex: 0 0 24px; }
+  .v3-ft-mp-line span { font-size: 0.44rem; }
+  .v3-ft-mp-badges { gap: 10px; }
+  .v3-ft-mp-badge { padding: 8px 14px; min-height: 36px; border-radius: 5px; }
+  .mp-amz-txt { font-size: 0.95rem; }
+  .mp-amz-arr { width: 46px; height: 12px; }
+  .mp-fk-txt { font-size: 0.95rem; }
 }
 
 @media (max-width: 375px) {
