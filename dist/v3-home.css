@@ -440,62 +440,12 @@
    ════════════════════════════════════════════════════ */
 .v3-instagram { padding: var(--v3-sy) 0; background: var(--v3-warm); }
 .v3-instagram-head { text-align: center; margin-bottom: clamp(24px, 3vw, 40px); }
-.v3-instagram-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: clamp(8px, 1.2vw, 16px);
-  max-width: 960px;
+.v3-elfsight-wrap {
+  max-width: 1100px;
   margin: 0 auto;
   padding: 0 var(--v3-gx);
-}
-.v3-ig-card {
-  position: relative;
-  aspect-ratio: 1;
+  min-height: 200px;
   overflow: hidden;
-  display: block;
-  background: #f0ece5;
-}
-.v3-ig-card img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.4s ease, filter 0.4s ease;
-  filter: saturate(0.92);
-}
-.v3-ig-card:hover img { transform: scale(1.05); filter: saturate(1); }
-.v3-ig-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(26, 24, 21, 0.55);
-  display: flex;
-  align-items: flex-end;
-  padding: 12px;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-.v3-ig-card:hover .v3-ig-overlay { opacity: 1; }
-.v3-ig-overlay p {
-  font: 400 0.72rem/1.4 var(--v3-sans);
-  color: #fff;
-  margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.v3-ig-reel {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: rgba(0,0,0,0.5);
-  color: #fff;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
 }
 .v3-instagram-cta {
   text-align: center;
@@ -898,13 +848,9 @@
   .v3-social-row div { flex: 0 0 calc(33.33% - 4px); }
   .v3-instagram { padding: var(--v3-sy) 0; }
   .v3-instagram-head { margin-bottom: clamp(12px, 2.5vw, 20px); }
-  .v3-instagram-grid { grid-template-columns: repeat(2, 1fr); gap: 5px; }
+  .v3-elfsight-wrap { padding: 0 12px; min-height: 150px; }
   .v3-instagram-cta { margin-top: clamp(10px, 2.5vw, 20px); }
   .v3-btn-ig { padding: 9px 22px; font-size: 0.72rem; }
-
-  /* ── Compact reels ── */
-  .v3-reels { padding: var(--v3-sy) 0; }
-  .v3-reels-rail { gap: 12px; }
 
   /* ── Compact footer ── */
   .v3-ft-tagline { padding: clamp(10px, 2.5vw, 16px) var(--v3-gutter); gap: clamp(6px, 1.5vw, 12px); }
@@ -2148,18 +2094,6 @@
 .v3-featured-centered .v3-featured-meta { justify-content: center; }
 .v3-featured-centered .v3-featured-desc { margin-inline: auto; }
 
-/* ══════════════════════════════════════════════════════════════
-   REEL SECTION — Restored from git history
-   ══════════════════════════════════════════════════════════════ */
-.v3-reels { padding: var(--v3-sy) 0; background: var(--v3-charcoal); overflow: hidden; }
-.v3-reels-rail { display: flex; gap: 20px; padding: 0 var(--v3-gutter); overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-.v3-reels-rail::-webkit-scrollbar { display: none; }
-.v3-reel-card { flex: 0 0 calc(25% - 15px); aspect-ratio: 9/16; border-radius: 12px; overflow: hidden; position: relative; scroll-snap-align: start; background: var(--v3-dark); }
-.v3-reel-media { width: 100%; height: 100%; position: relative; }
-.v3-reel-video { width: 100%; height: 100%; object-fit: cover; }
-.v3-reel-overlay { position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: space-between; padding: 16px; background: linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.4)); }
-.v3-reel-play, .v3-reel-mute { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.85rem; backdrop-filter: blur(4px); transition: background .2s; }
-.v3-reel-play:hover, .v3-reel-mute:hover { background: rgba(255,255,255,0.25); }
 
 /* ══════════════════════════════════════════════════════════════
    PHASE 3 — Homepage Section Alignment
@@ -2178,13 +2112,6 @@
 /* ══════════════════════════════════════════════════════════════
    RESPONSIVE — New Sections
    ══════════════════════════════════════════════════════════════ */
-@media (max-width: 1000px) {
-  .v3-reel-card { flex: 0 0 calc(33.33% - 14px); }
-}
 @media (max-width: 640px) {
-  .v3-reel-card { flex: 0 0 calc(50% - 10px); }
   .v3-featured-centered .v3-featured-content { text-align: center; padding: var(--v3-sy) 20px; }
-}
-@media (max-width: 375px) {
-  .v3-reel-card { flex: 0 0 75vw; }
 }
