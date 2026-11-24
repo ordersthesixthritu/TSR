@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+Disallow: /cart
+Disallow: /checkout
+Disallow: /account
+Disallow: /order-confirmed
+Disallow: /search
+Disallow: /wishlist
+Disallow: /track-order
+Disallow: /admin.html
+Disallow: /new.zip
+
+Sitemap: https://www.thesixthritu.in/sitemap.xml
