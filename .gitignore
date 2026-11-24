@@ -12,3 +12,4 @@ service-account*.json
 Thumbs.db
 *.zip
 The Sixth Ritu/
+dist/_png_originals/
